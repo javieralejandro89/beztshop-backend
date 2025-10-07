@@ -1,0 +1,471 @@
+// prisma/schema.prisma - Configuración MySQL
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  role      UserRole @default(CLIENT)
+  userLevel UserLevel @default(REGULAR)
+  isActive  Boolean  @default(true)
+  lastLogin DateTime?
+  newsletterSubscribed Boolean @default(false)
+  newsletterSubscribedAt DateTime?
+  newsletterUnsubscribedAt DateTime?
+  newsletterTags String? // Para segmentación: "VIP,TECH,OFERTAS"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  orders    Order[]
+  cart      CartItem[]
+  sessions  UserSession[]
+  reviews   ProductReview[]
+  addresses      UserAddress[]
+  paymentMethods UserPaymentMethod[]
+  wishlistItems  WishlistItem[]
+  newsletterCampaignsSent NewsletterCampaignSent[] @relation("UserNewsletterRecipient")
+  newsletterCampaignsCreated NewsletterCampaign[] @relation("NewsletterCreator")
+  
+  @@map("users")
+  @@index([email])
+  @@index([role])
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_sessions")
+  @@index([token])
+  @@index([expiresAt])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?   @db.Text
+  image       String?
+  parentId    String?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
+  
+  @@map("categories")
+  @@index([slug])
+  @@index([parentId])
+  @@index([isActive])
+}
+
+model Product {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  description  String   @db.Text
+  shortDesc    String?  @db.VarChar(500)
+  price        Decimal  @db.Decimal(10, 2)
+  comparePrice Decimal? @db.Decimal(10, 2)
+  costPrice    Decimal? @db.Decimal(10, 2)
+  images       Json     @default("[]")
+  categoryId   String
+  brand        String?
+  model        String?
+  sku          String?  @unique
+  barcode      String?
+  weight       Decimal? @db.Decimal(8, 2)
+  dimensions   Json?
+  inStock      Boolean  @default(true)
+  stockType    StockType @default(PHYSICAL)
+  stockCount   Int      @default(0)
+  lowStockThreshold Int @default(5)
+  trackInventory Boolean @default(true)
+  isActive     Boolean  @default(true)
+  isFeatured   Boolean  @default(false)
+  isDigital    Boolean  @default(false)
+  tags         Json     @default("[]")
+  metaTitle    String?
+  metaDesc     String?  @db.VarChar(160)
+  searchTerms  String?  @db.Text
+  viewCount    Int      @default(0)
+  salesCount   Int      @default(0)
+  rating       Decimal? @db.Decimal(3, 2)
+  reviewCount  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  category     Category @relation(fields: [categoryId], references: [id])
+  variants     ProductVariant[]
+  orderItems   OrderItem[]
+  cartItems    CartItem[]
+  reviews      ProductReview[]
+  wishlistItems WishlistItem[]
+  
+  @@map("products")
+  @@index([slug])
+  @@index([categoryId])
+  @@index([isActive])
+  @@index([isFeatured])
+  @@index([stockType])
+  @@index([price])
+  @@index([brand])
+  // MySQL fulltext index
+  @@fulltext([name, description])
+}
+
+model ProductVariant {
+  id         String  @id @default(cuid())
+  productId  String
+  type       VariantType
+  value      String
+  price      Decimal? @db.Decimal(10, 2)
+  stock      Int?
+  sku        String?
+  isActive   Boolean @default(true)
+  sortOrder  Int     @default(0)
+  
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@map("product_variants")
+  @@index([productId])
+  @@index([type])
+  @@unique([productId, type, value])
+}
+
+model ProductReview {
+  id        String   @id @default(cuid())
+  productId String
+  userId    String
+  rating    Int      @db.TinyInt
+  title     String?
+  comment   String?  @db.Text
+  isVerified Boolean @default(false)
+  isApproved Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("product_reviews")
+  @@index([productId])
+  @@index([userId])
+  @@index([rating])
+  @@unique([productId, userId])
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String?
+  sessionId String?
+  productId String
+  quantity  Int      @default(1)
+  variants  Json?
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@map("cart_items")
+  @@index([userId])
+  @@index([sessionId])
+  @@index([productId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  orderNumber     String      @unique
+  userId          String?
+  guestEmail      String?
+  subtotal        Decimal     @db.Decimal(10, 2)
+  taxAmount       Decimal     @db.Decimal(10, 2) @default(0)
+  shippingAmount  Decimal     @db.Decimal(10, 2) @default(0)
+  discountAmount  Decimal     @db.Decimal(10, 2) @default(0)
+  totalAmount     Decimal     @db.Decimal(10, 2)
+  currency        String      @default("USD")
+  status          OrderStatus @default(PENDING)
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentMethod   String?
+  paymentId       String?
+  shippingAddress Json
+  billingAddress  Json?
+  notes           String?     @db.Text
+  trackingNumber  String?
+  shippedAt       DateTime?
+  deliveredAt     DateTime?
+  cancelledAt     DateTime?
+  refundedAt      DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  user            User?       @relation(fields: [userId], references: [id])
+  items           OrderItem[]
+  
+  @@map("orders")
+  @@index([orderNumber])
+  @@index([userId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  productId   String
+  productName String
+  quantity    Int
+  price       Decimal @db.Decimal(10, 2)
+  totalPrice  Decimal @db.Decimal(10, 2)
+  variants    Json?
+  productData Json?
+  
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product @relation(fields: [productId], references: [id])
+  
+  @@map("order_items")
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Coupon {
+  id          String     @id @default(cuid())
+  code        String     @unique
+  type        CouponType @default(PERCENTAGE)
+  value       Decimal    @db.Decimal(10, 2)
+  minAmount   Decimal?   @db.Decimal(10, 2)
+  maxDiscount Decimal?   @db.Decimal(10, 2)
+  usageLimit  Int?
+  usageCount  Int        @default(0)
+  isActive    Boolean    @default(true)
+  startsAt    DateTime?
+  expiresAt   DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  @@map("coupons")
+  @@index([code])
+  @@index([isActive])
+  @@index([expiresAt])
+}
+
+model UserAddress {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  street    String
+  city      String
+  state     String
+  zipCode   String
+  country   String   @default("México")
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_addresses")
+  @@index([userId])
+  @@index([isDefault])
+}
+
+model UserPaymentMethod {
+  id                    String            @id @default(cuid())
+  userId                String
+  type                  PaymentMethodType @default(CARD)
+  last4                 String?           @db.Char(4)
+  brand                 String?
+  expiryMonth           Int?              @db.TinyInt
+  expiryYear            Int?
+  stripePaymentMethodId String?           @unique
+  paypalEmail           String?
+  isDefault             Boolean           @default(false)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_payment_methods")
+  @@index([userId])
+  @@index([isDefault])
+  @@index([stripePaymentMethodId])
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@map("wishlist_items")
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+  @@index([createdAt])
+}
+
+model NewsletterGuestSubscriber {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String?
+  isActive        Boolean   @default(true)
+  tags            String?   // Para segmentación
+  subscribedAt    DateTime  @default(now())
+  unsubscribedAt  DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  campaigns       NewsletterCampaignSent[] @relation("GuestNewsletterRecipient")
+  
+  @@map("newsletter_guest_subscribers")
+  @@index([email])
+  @@index([isActive])
+}
+
+// Tabla de campañas de newsletter
+model NewsletterCampaign {
+  id              String    @id @default(cuid())
+  subject         String
+  content         String    @db.Text // HTML content
+  previewText     String?   @db.VarChar(200)
+  fromName        String    @default("ServiPro Garcia")
+  fromEmail       String    @default("newsletter@serviprogarcia.com")
+  tags            String?   // Para segmentar envíos
+  status          NewsletterStatus @default(DRAFT)
+  scheduledFor    DateTime?
+  sentAt          DateTime?
+  sentCount       Int       @default(0)
+  openCount       Int       @default(0)
+  clickCount      Int       @default(0)
+  createdBy       String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  admin           User      @relation("NewsletterCreator", fields: [createdBy], references: [id])
+  recipients      NewsletterCampaignSent[]
+  
+  @@map("newsletter_campaigns")
+  @@index([status])
+  @@index([scheduledFor])
+}
+
+// Tabla de registro de envíos
+model NewsletterCampaignSent {
+  id              String    @id @default(cuid())
+  campaignId      String
+  userId          String?   // Si es un usuario registrado
+  guestSubscriberId String? // Si es un suscriptor guest
+  email           String    // Email al que se envió (redundante pero útil)
+  sentAt          DateTime  @default(now())
+  openedAt        DateTime?
+  clickedAt       DateTime?
+  
+  campaign        NewsletterCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  user            User? @relation("UserNewsletterRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  guestSubscriber NewsletterGuestSubscriber? @relation("GuestNewsletterRecipient", fields: [guestSubscriberId], references: [id], onDelete: Cascade)
+  
+  @@map("newsletter_campaign_sent")
+  @@unique([campaignId, email]) // Un email solo puede recibir una campaña una vez
+  @@index([campaignId])
+  @@index([userId])
+  @@index([guestSubscriberId])
+  @@index([email])
+}
+
+enum UserRole {
+  ADMIN
+  CLIENT
+}
+
+enum UserLevel {
+  REGULAR
+  VIP
+  WHOLESALE
+}
+
+enum StockType {
+  PHYSICAL
+  DROPSHIPPING
+  BOTH
+}
+
+enum VariantType {
+  SIZE
+  COLOR
+  CAPACITY
+  MODEL
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+}
+
+enum PaymentMethodType {
+  CARD
+  PAYPAL
+  BANK_TRANSFER
+  CASH_ON_DELIVERY
+}
+
+enum NewsletterStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  CANCELLED
+}
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("system_settings")
+  @@index([key])
+}
