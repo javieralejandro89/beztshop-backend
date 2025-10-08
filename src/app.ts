@@ -60,7 +60,7 @@ app.use(cors({
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:3001', 
-      'http://192.168.68.119:3000',
+      'http://192.168.68.108:3000',
       'https://serviprogarcia.com',
       'https://www.serviprogarcia.com'
     ];
