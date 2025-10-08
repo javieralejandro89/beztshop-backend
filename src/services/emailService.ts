@@ -35,7 +35,7 @@ export const emailService = {
         fromEmail = from;
       } else {
         // Construir el email FROM por defecto
-        const defaultEmail = process.env.FROM_EMAIL || 'contacto@serviprogarcia.com';
+        const defaultEmail = process.env.FROM_EMAIL || 'atencionalcliente@beztshop.com';
         
         // Verificar si ya tiene formato de nombre + email
         if (defaultEmail.includes('<') && defaultEmail.includes('>')) {
@@ -43,7 +43,7 @@ export const emailService = {
           fromEmail = defaultEmail;
         } else {
           // Solo es un email, agregar el nombre
-          fromEmail = `ServiPro Garcia LLC <${defaultEmail}>`;
+          fromEmail = `BeztShop <${defaultEmail}>`;
         }
       }
 
@@ -52,9 +52,9 @@ export const emailService = {
         ? fromEmail.split('<')[1].replace('>', '') 
         : fromEmail;
         
-      if (!emailOnly.endsWith('@serviprogarcia.com')) {
-        console.warn(`⚠️  FROM email ${emailOnly} no usa dominio verificado. Usando contacto@serviprogarcia.com`);
-        fromEmail = 'ServiPro Garcia LLC <contacto@serviprogarcia.com>';
+      if (!emailOnly.endsWith('@beztshop.com')) {
+        console.warn(`⚠️  FROM email ${emailOnly} no usa dominio verificado. Usando atencionalcliente@beztshop.com`);
+        fromEmail = 'BeztShop <atencionalcliente@beztshop.com>';
       }
 
       console.log(`📧 Enviando email a: ${to} desde: ${fromEmail}`);

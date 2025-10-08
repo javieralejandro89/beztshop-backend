@@ -352,8 +352,8 @@ model NewsletterCampaign {
   subject         String
   content         String    @db.Text // HTML content
   previewText     String?   @db.VarChar(200)
-  fromName        String    @default("ServiPro Garcia")
-  fromEmail       String    @default("newsletter@serviprogarcia.com")
+  fromName        String    @default("BeztShop")
+  fromEmail       String    @default("newsletter@beztshop.com")
   tags            String?   // Para segmentar envíos
   status          NewsletterStatus @default(DRAFT)
   scheduledFor    DateTime?

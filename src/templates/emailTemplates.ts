@@ -43,7 +43,7 @@ export const orderStatusTemplate = (data: {
             
             <p>Puedes revisar el estado completo de tu pedido en tu cuenta.</p>
             
-            <p>Gracias por comprar con ServiPro Garcia LLC.</p>
+            <p>Gracias por comprar con BeztShop.</p>
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
                 <p style="font-size: 12px; color: #6b7280;">
@@ -90,7 +90,7 @@ export const orderCreatedTemplate = (data: {
             
             <p>Te mantendremos informado sobre el estado de tu pedido.</p>
             
-            <p>Gracias por confiar en ServiPro Garcia LLC.</p>
+            <p>Gracias por confiar en BeztShop.</p>
         </div>
     </body>
     </html>
@@ -115,7 +115,7 @@ export const forgotPasswordTemplate = (data: {
             
             <p>Hola ${data.customerName},</p>
             
-            <p>Recibimos una solicitud para restablecer tu contraseña de ServiPro Garcia.</p>
+            <p>Recibimos una solicitud para restablecer tu contraseña de BeztShop.</p>
             
             <div style="background: #fef3c7; border: 1px solid #fbbf24; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <p style="margin: 0;"><strong>Haz clic en el siguiente enlace para crear una nueva contraseña:</strong></p>
@@ -134,7 +134,7 @@ export const forgotPasswordTemplate = (data: {
             
             <p>Por tu seguridad, nunca compartas este enlace con nadie.</p>
             
-            <p>Gracias por confiar en ServiPro Garcia LLC.</p>
+            <p>Gracias por confiar en BeztShop.</p>
             
             <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
                 <p style="font-size: 12px; color: #6b7280;">
@@ -168,7 +168,7 @@ export const newsletterTemplate = {
               <!-- Header -->
               <div style="background: linear-gradient(135deg, #16a34a 0%, #fbbf24 100%); padding: 30px; text-align: center;">
                   <h1 style="color: white; margin: 0; font-size: 28px;">
-                    ${data.isReactivation ? '¡Bienvenido de vuelta!' : '¡Bienvenido a ServiPro Garcia!'}
+                    ${data.isReactivation ? '¡Bienvenido de vuelta!' : '¡Bienvenido a BeztShop!'}
                   </h1>
               </div>
               
@@ -223,7 +223,7 @@ export const newsletterTemplate = {
               <!-- Footer -->
               <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
                   <p style="color: #6b7280; font-size: 14px; margin: 0;">
-                      © 2024 ServiPro Garcia LLC. Todos los derechos reservados.
+                      © 2024 BeztShop. Todos los derechos reservados.
                   </p>
                   <p style="color: #9ca3af; font-size: 12px; margin: 10px 0 0 0;">
                       Si no deseas recibir más emails, puedes 
@@ -258,9 +258,9 @@ export const newsletterTemplate = {
               <!-- Header -->
               <div style="background: linear-gradient(135deg, #16a34a 0%, #fbbf24 100%); padding: 20px; text-align: center;">
                   <img src="${process.env.FRONTEND_URL}/logo.png" 
-                       alt="ServiPro Garcia" 
+                       alt="BeztShop" 
                        style="height: 60px; width: auto; margin-bottom: 10px;">
-                  <h2 style="color: white; margin: 0; font-size: 24px;">ServiPro Garcia Newsletter</h2>
+                  <h2 style="color: white; margin: 0; font-size: 24px;">BeztShop Newsletter</h2>
               </div>
               
               <!-- Content -->
@@ -288,7 +288,7 @@ export const newsletterTemplate = {
                   </div>
                   
                   <p style="color: #6b7280; font-size: 14px; margin: 10px 0; text-align: center;">
-                      © 2024 ServiPro Garcia LLC. Todos los derechos reservados.
+                      © 2024 BeztShop. Todos los derechos reservados.
                   </p>
                   
                   <p style="color: #9ca3af; font-size: 12px; margin: 10px 0 0 0; text-align: center;">

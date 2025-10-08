@@ -58,13 +58,13 @@ export class PDFService {
 
     // Datos de la empresa actualizados
     const companyData = {
-      name: 'ServiPro Garcia LLC',      
-      city: 'Huston, TX',
-      zipCode: '77063',
-      country: 'Estados Unidos',
-      phone: '+1 (832) 523 0060',
-      email: 'contacto@serviprogarcia.com',
-      website: 'www.serviprogarcia.com',
+      name: 'BeztShop',      
+      city: 'México, CDMX',
+      zipCode: '03100',
+      country: 'México',
+      phone: '+52 998 578 0385',
+      email: 'atencionalcliente@beztshop.com',
+      website: 'www.beztshop.com',
       primaryColor: '#22C55E', // Verde
       secondaryColor: '#EAB308' // Amarillo
     };

@@ -73,7 +73,7 @@ export const subscribe = async (req: Request, res: Response) => {
       // Enviar email de bienvenida
       await emailService.sendEmail({
         to: email,
-        subject: '¡Bienvenido a ServiPro Garcia Newsletter!',
+        subject: '¡Bienvenido a BeztShop Newsletter!',
         html: newsletterTemplate.welcome({
           name: existingUser.firstName || 'Suscriptor',
           discountCode: 'BIENVENIDA15'
@@ -112,7 +112,7 @@ export const subscribe = async (req: Request, res: Response) => {
 
       await emailService.sendEmail({
         to: email,
-        subject: '¡Bienvenido de vuelta a ServiPro Garcia Newsletter!',
+        subject: '¡Bienvenido de vuelta a BeztShop Newsletter!',
         html: newsletterTemplate.welcome({
           name: name || 'Suscriptor',
           isReactivation: true
@@ -133,7 +133,7 @@ export const subscribe = async (req: Request, res: Response) => {
     // Enviar email de bienvenida
     await emailService.sendEmail({
       to: email,
-      subject: '¡Bienvenido a ServiPro Garcia Newsletter!',
+      subject: '¡Bienvenido a BeztShop Newsletter!',
       html: newsletterTemplate.welcome({
         name: name || 'Suscriptor',
         discountCode: 'BIENVENIDA15'

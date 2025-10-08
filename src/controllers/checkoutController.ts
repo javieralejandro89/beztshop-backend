@@ -19,7 +19,7 @@ const sendAdminOrderNotification = async (orderData: {
   shippingAddress: any;
 }) => {
   try {
-    const adminEmail = 'contacto@serviprogarcia.com';
+    const adminEmail = 'atencionalcliente@beztshop.com';
     
     const paymentStatusBadge = orderData.paymentMethod === 'zelle' 
       ? '<span style="background: #fbbf24; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 12px;">ZELLE - PENDIENTE</span>'
@@ -59,7 +59,7 @@ const sendAdminOrderNotification = async (orderData: {
       to: adminEmail,
       subject: `🔔 Nueva Orden #${orderData.orderNumber} - ${orderData.paymentMethod.toUpperCase()}`,
       html,
-      from: 'ServiPro Garcia Sistema <contacto@serviprogarcia.com>'
+      from: 'BeztShop Sistema <atencionalcliente@beztshop.com>'
     });
 
   } catch (error: any) {
@@ -112,7 +112,7 @@ const sendCustomerOrderNotification = async (params: {
                             <span>$${params.total.toFixed(2)} USD</span>
                         </div>
                     </div>
-                    <p>Gracias por confiar en <strong>ServiPro Garcia LLC</strong>.</p>
+                    <p>Gracias por confiar en <strong>BeztShop</strong>.</p>
                 </div>
             </div>
         </body>
@@ -147,7 +147,7 @@ const sendCustomerOrderNotification = async (params: {
                         </div>
                     </div>
                     <p>Te mantendremos informado sobre el estado de tu pedido.</p>
-                    <p>Gracias por confiar en <strong>ServiPro Garcia LLC</strong>.</p>
+                    <p>Gracias por confiar en <strong>BeztShop</strong>.</p>
                 </div>
             </div>
         </body>
@@ -159,7 +159,7 @@ const sendCustomerOrderNotification = async (params: {
       to: params.email,
       subject,
       html,
-      from: 'ServiPro Garcia LLC <contacto@serviprogarcia.com>'
+      from: 'BeztShop <atencionalcliente@beztshop.com>'
     });
 
   } catch (error: any) {

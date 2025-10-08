@@ -61,8 +61,8 @@ app.use(cors({
       'http://localhost:3000',
       'http://localhost:3001', 
       'http://192.168.68.108:3000',
-      'https://serviprogarcia.com',
-      'https://www.serviprogarcia.com'
+      'https://beztshop.com',
+      'https://www.beztshop.com'
     ];
     
     if (allowedOrigins.includes(origin)) {

@@ -11,13 +11,13 @@ async function main() {
   const adminPassword = await hashPassword('Admin123!@#');
   
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@servipro-garcia.com' },
+    where: { email: 'admin@beztshop.com' },
     update: {},
     create: {
-      email: 'admin@servipro-garcia.com',
+      email: 'admin@beztshop.com',
       password: adminPassword,
       firstName: 'Admin',
-      lastName: 'ServiPro',
+      lastName: 'BeztShop',
       role: 'ADMIN',
       userLevel: 'REGULAR',
       isActive: true
@@ -157,7 +157,7 @@ async function main() {
   }
 
   console.log('Seed completado!');
-  console.log('Credenciales: admin@servipro-garcia.com / Admin123!@#');
+  console.log('Credenciales: admin@beztshop.com / Admin123!@#');
   console.log('Categorías creadas:', categories.length);
 }
 

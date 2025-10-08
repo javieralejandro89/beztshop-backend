@@ -39,8 +39,8 @@ export const generateTokens = (user: any) => {
     process.env.JWT_SECRET!,
     { 
       expiresIn: process.env.JWT_EXPIRE || '15m',
-      issuer: 'servipro-garcia',
-      audience: 'servipro-client'
+      issuer: 'bezt-shop',
+      audience: 'beztshop-client'
     }
   );
 
@@ -50,8 +50,8 @@ export const generateTokens = (user: any) => {
     process.env.JWT_REFRESH_SECRET!,
     { 
       expiresIn: process.env.JWT_REFRESH_EXPIRE || '7d',
-      issuer: 'servipro-garcia',
-      audience: 'servipro-client'
+      issuer: 'bezt-shop',
+      audience: 'beztshop-client'
     }
   );
 
@@ -62,8 +62,8 @@ export const generateTokens = (user: any) => {
 export const verifyAccessToken = (token: string): TokenPayload => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!, {
-      issuer: 'servipro-garcia',
-      audience: 'servipro-client'
+      issuer: 'bezt-shop',
+      audience: 'beztshop-client'
     }) as jwt.JwtPayload;
     
     if (decoded.type !== 'access') {
@@ -86,8 +86,8 @@ export const verifyAccessToken = (token: string): TokenPayload => {
 export const verifyRefreshToken = (token: string): TokenPayload => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET!, {
-      issuer: 'servipro-garcia',
-      audience: 'servipro-client'
+      issuer: 'bezt-shop',
+      audience: 'beztshop-client'
     }) as jwt.JwtPayload;
     
     if (decoded.type !== 'refresh') {

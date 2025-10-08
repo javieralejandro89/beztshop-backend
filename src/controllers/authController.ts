@@ -56,7 +56,7 @@ const setRefreshTokenCookie = (res: Response, refreshToken: string) => {
     sameSite: isProduction ? 'strict' : 'lax',
     maxAge: expireDays * 24 * 60 * 60 * 1000, // Convertir días a milisegundos
     path: '/', // Disponible en toda la app
-    domain: isProduction ? '.serviprogarcia.com' : undefined // Punto inicial permite subdominios
+    domain: isProduction ? '.beztshop.com' : undefined // Punto inicial permite subdominios
   });
 };
 
@@ -67,7 +67,7 @@ const clearRefreshTokenCookie = (res: Response) => {
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
     path: '/',
-    domain: process.env.NODE_ENV === 'production' ? '.serviprogarcia.com' : undefined
+    domain: process.env.NODE_ENV === 'production' ? '.beztshop.com' : undefined
   });
 };
 
@@ -584,7 +584,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     try {
       await emailService.sendEmail({
         to: user.email,
-        subject: 'Recuperar Contraseña - ServiPro Garcia',
+        subject: 'Recuperar Contraseña - BeztShop',
         html: forgotPasswordTemplate({
           customerName: `${user.firstName} ${user.lastName}`,
           resetLink,

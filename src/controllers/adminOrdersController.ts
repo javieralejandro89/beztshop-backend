@@ -711,7 +711,7 @@ async function sendOrderStatusNotification(params: {
       to: params.email,
       subject: `Actualización de tu pedido #${params.orderNumber}`,
       html,
-      from: 'ServiPro Garcia LLC <contacto@serviprogarcia.com>'
+      from: 'BeztShop <atencionalcliente@beztshop.com>'
     });
 
     if (!result.success) {
@@ -751,7 +751,7 @@ async function sendCustomOrderNotification(params: {
       <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
           <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
               <div style="background: #2563eb; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-                  <h2 style="margin: 0; text-align: center;">ServiPro Garcia LLC</h2>
+                  <h2 style="margin: 0; text-align: center;">BeztShop</h2>
               </div>
               
               <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px;">
@@ -766,7 +766,7 @@ async function sendCustomOrderNotification(params: {
                   
                   <div style="text-align: center; margin-top: 30px;">
                       <p style="color: #6b7280; font-size: 14px;">
-                          Gracias por confiar en ServiPro Garcia LLC
+                          Gracias por confiar en BeztShop
                       </p>
                   </div>
               </div>
@@ -775,7 +775,7 @@ async function sendCustomOrderNotification(params: {
                   <p style="font-size: 12px; color: #9ca3af;">
                       Este es un email automático, por favor no respondas directamente a este mensaje.
                       <br>
-                      Para soporte, contacta a: contacto@serviprogarcia.com
+                      Para soporte, contacta a: atencionalcliente@beztshop.com
                   </p>
               </div>
           </div>
@@ -787,7 +787,7 @@ async function sendCustomOrderNotification(params: {
       to: params.email,
       subject: params.subject,
       html,
-      from: 'ServiPro Garcia LLC <contacto@serviprogarcia.com>'
+      from: 'BeztShop <atencionalcliente@beztshop.com>'
     });
 
     if (!result.success) {
@@ -833,7 +833,7 @@ export const adminOrderNotificationTemplate = (data: {
         <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: #dc2626; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
                 <h2 style="margin: 0;">🔔 Nueva Orden Creada</h2>
-                <p style="margin: 5px 0 0 0; opacity: 0.9;">Panel de Administración - ServiPro Garcia</p>
+                <p style="margin: 5px 0 0 0; opacity: 0.9;">Panel de Administración - BeztShop</p>
             </div>
             
             <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px;">
@@ -892,7 +892,7 @@ export const adminOrderNotificationTemplate = (data: {
             
             <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center;">
                 <p style="font-size: 12px; color: #9ca3af;">
-                    Panel de Administración - ServiPro Garcia LLC<br>
+                    Panel de Administración - BeztShop<br>
                     ${new Date().toLocaleDateString('es-ES', { 
                         year: 'numeric', 
                         month: 'long', 
@@ -920,7 +920,7 @@ async function sendAdminOrderNotification(orderData: {
   shippingAddress: any;
 }) {
   try {
-    const adminEmail = 'contacto@serviprogarcia.com'; // Email principal del admin
+    const adminEmail = 'atencionalcliente@beztshop.com'; // Email principal del admin
     
     const html = adminOrderNotificationTemplate(orderData);
 
@@ -928,7 +928,7 @@ async function sendAdminOrderNotification(orderData: {
       to: adminEmail,
       subject: `🔔 Nueva Orden #${orderData.orderNumber} - ${orderData.paymentMethod.toUpperCase()}`,
       html,
-      from: 'ServiPro Garcia Sistema <contacto@serviprogarcia.com>'
+      from: 'BeztShop Sistema <atencionalcliente@beztshop.com>'
     });
 
     if (!result.success) {
@@ -1006,7 +1006,7 @@ async function sendCustomerOrderNotification(params: {
                     </div>
                     
                     <p>Nos pondremos en contacto contigo muy pronto para coordinar el pago y la entrega.</p>
-                    <p>Gracias por confiar en <strong>ServiPro Garcia LLC</strong>.</p>
+                    <p>Gracias por confiar en <strong>BeztShop</strong>.</p>
                 </div>
             </div>
         </body>
@@ -1049,7 +1049,7 @@ async function sendCustomerOrderNotification(params: {
                     </div>
                     
                     <p>Te mantendremos informado sobre el estado de tu pedido y el envío.</p>
-                    <p>Gracias por confiar en <strong>ServiPro Garcia LLC</strong>.</p>
+                    <p>Gracias por confiar en <strong>BeztShop</strong>.</p>
                 </div>
             </div>
         </body>
@@ -1061,7 +1061,7 @@ async function sendCustomerOrderNotification(params: {
       to: params.email,
       subject,
       html,
-      from: 'ServiPro Garcia LLC <contacto@serviprogarcia.com>'
+      from: 'BeztShop <atencionalcliente@beztshop.com>'
     });
 
     if (!result.success) {

@@ -134,7 +134,7 @@ export const getSiteSettings = async (req: AuthenticatedRequest, res: Response) 
     if (!settings) {
       // Crear configuración por defecto basada en el cliente
       const defaultSettings = {
-        siteName: 'ServiPro Garcia LLC',
+        siteName: 'BeztShop',
         siteDescription: 'Tienda en línea de productos especializados, Servicios de dropshipping, Venta de productos de alta demanda, Plataformas de venta de productos artesanales.',
         siteUrl: '',
         contactEmail: '',
@@ -240,7 +240,7 @@ export const getEmailSettings = async (req: AuthenticatedRequest, res: Response)
         smtpPassword: '',
         smtpSecure: false,
         fromEmail: '',
-        fromName: 'ServiPro Garcia LLC',
+        fromName: 'BeztShop',
         templates: {
           orderConfirmation: true,
           orderStatusUpdate: true,
