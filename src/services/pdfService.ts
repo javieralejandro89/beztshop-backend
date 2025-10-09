@@ -1,4 +1,4 @@
-// src/services/pdfService.ts - Generador de facturas PDF mejorado
+// src/services/pdfService.ts - Generador de facturas PDF con colores Dark Tech
 import PDFDocument from 'pdfkit';
 import { PrismaClient } from '@prisma/client';
 import path from 'path';
@@ -56,17 +56,17 @@ export class PDFService {
       throw new Error('Pedido no encontrado');
     }
 
-    // Datos de la empresa actualizados
+    // Datos de la empresa con colores Dark Tech
     const companyData = {
-      name: 'BeztShop',      
+      name: 'Tech Store',      
       city: 'México, CDMX',
       zipCode: '03100',
       country: 'México',
       phone: '+52 998 578 0385',
       email: 'atencionalcliente@beztshop.com',
       website: 'www.beztshop.com',
-      primaryColor: '#22C55E', // Verde
-      secondaryColor: '#EAB308' // Amarillo
+      primaryColor: '#FFD700', // Dorado - Color principal Dark Tech
+      secondaryColor: '#00C8FF' // Azul neón - Color secundario Dark Tech
     };
 
     return this.createPDF({
@@ -115,7 +115,7 @@ export class PDFService {
       .fillColor('#f8fafc')
       .fill();
 
-    // Línea decorativa superior
+    // Línea decorativa superior - Dorado
     doc
       .rect(0, 0, 612, 8)
       .fillColor(company.primaryColor)
@@ -126,13 +126,13 @@ export class PDFService {
 
     // Información de la empresa - Centro
     doc
-      .fillColor('#1f2937')
+      .fillColor('#0D0D0D') // Negro carbón para texto principal
       .fontSize(24)
       .font('Helvetica-Bold')
       .text(company.name, 150, 35);
 
     doc
-      .fillColor('#4b5563')
+      .fillColor('#1F1F1F') // Gris oscuro para texto secundario
       .fontSize(11)
       .font('Helvetica')
       .text(company.address, 150, 65)
@@ -149,22 +149,22 @@ export class PDFService {
       .stroke();
 
     doc
-      .fillColor('#1e40af')
+      .fillColor('#FFD700') // Dorado para título
       .fontSize(10)
       .font('Helvetica-Bold')
       .text('CONTACTO', 430, 35);
 
     doc
-      .fillColor('#374151')
-  .fontSize(9)
-  .font('Helvetica')
-  .text(`Tel: ${company.phone}`, 430, 50)
-  .fontSize(8)
-  .text(`Email: ${company.email}`, 430, 65, { width: 125, ellipsis: true })
-  .fontSize(9)
-  .text(`Web: ${company.website}`, 430, 85);
+      .fillColor('#1F1F1F') // Gris oscuro para info de contacto
+      .fontSize(9)
+      .font('Helvetica')
+      .text(`Tel: ${company.phone}`, 430, 50)
+      .fontSize(8)
+      .text(`Email: ${company.email}`, 430, 65, { width: 125, ellipsis: true })
+      .fontSize(9)
+      .text(`Web: ${company.website}`, 430, 85);
 
-    // Línea decorativa inferior
+    // Línea decorativa inferior - Azul neón
     doc
       .rect(0, 142, 612, 2)
       .fillColor(company.secondaryColor)
@@ -177,10 +177,10 @@ export class PDFService {
     try {
       // Intentar cargar el logo desde diferentes ubicaciones posibles
       const possiblePaths = [
-        path.join(process.cwd(), 'public', 'logo.png'),
-        path.join(process.cwd(), '../frontend/public/logo.png'),
-        path.join(process.cwd(), 'assets', 'logo.png'),
-        path.join(__dirname, '../../public/logo.png')
+        path.join(process.cwd(), 'public', 'brandpdf.png'),
+        path.join(process.cwd(), '../frontend/public/brandpdf.png'),
+        path.join(process.cwd(), 'assets', 'brandpdf.png'),
+        path.join(__dirname, '../../public/brandpdf.png')
       ];
 
       let logoPath = null;
@@ -204,18 +204,18 @@ export class PDFService {
   }
 
   private static createLogoPlaceholder(doc: PDFKit.PDFDocument, x: number, y: number, width: number, height: number) {
-    // Crear un placeholder atractivo
+    // Crear un placeholder con colores Dark Tech
     doc
       .rect(x, y, width, height)
-      .fillColor('#22C55E')
+      .fillColor('#FFD700') // Dorado
       .fill()
-      .strokeColor('#16A34A')
+      .strokeColor('#00C8FF') // Azul neón para el borde
       .lineWidth(2)
       .stroke();
     
     // Agregar texto SPG
     doc
-      .fillColor('#ffffff')
+      .fillColor('#0D0D0D') // Negro para el texto
       .fontSize(16)
       .font('Helvetica-Bold')
       .text('SPG', x + width/2 - 15, y + height/2 - 8);
@@ -224,14 +224,14 @@ export class PDFService {
   private static generateCustomerInformation(doc: PDFKit.PDFDocument, data: InvoiceData) {
     const customerInformationTop = 180;
 
-    // Título FACTURA con estilo
+    // Título FACTURA con estilo Dark Tech
     doc
       .rect(50, customerInformationTop, 512, 40)
-      .fillColor('#1e40af')
+      .fillColor('#0D0D0D') // Negro carbón
       .fill();
 
     doc
-      .fillColor('#ffffff')
+      .fillColor('#FFD700') // Dorado para el texto
       .fontSize(20)
       .font('Helvetica-Bold')
       .text('FACTURA / INVOICE', 60, customerInformationTop + 12);
@@ -247,13 +247,13 @@ export class PDFService {
       .stroke();
 
     doc
-      .fillColor('#1e40af')
+      .fillColor('#FFD700') // Dorado para títulos
       .fontSize(12)
       .font('Helvetica-Bold')
       .text('INFORMACIÓN DEL PEDIDO', 60, infoTop + 10);
 
     doc
-      .fillColor('#374151')
+      .fillColor('#1F1F1F') // Gris oscuro para texto
       .fontSize(10)
       .font('Helvetica')
       .text(`Número: ${data.order.orderNumber}`, 60, infoTop + 30)
@@ -264,7 +264,7 @@ export class PDFService {
     if (data.order.paymentMethod) {
       const paymentText = this.getPaymentMethodText(data.order.paymentMethod, data.order.paymentId);
       doc
-        .fillColor('#16A34A')
+        .fillColor('#00C8FF') // Azul neón para método de pago
         .fontSize(9)
         .font('Helvetica-Bold')
         .text(`Método de pago: ${paymentText}`, 60, infoTop + 85);
@@ -272,7 +272,7 @@ export class PDFService {
 
     if (data.order.paymentStatus === 'PAID') {
       doc
-        .fillColor('#16A34A')
+        .fillColor('#16A34A') // Verde para PAGADO (mantener por claridad)
         .fontSize(9)
         .font('Helvetica-Bold')
         .text('✓ PAGADO', 60, infoTop + 100);
@@ -288,13 +288,13 @@ export class PDFService {
       .stroke();
 
     doc
-      .fillColor('#1e40af')
+      .fillColor('#FFD700') // Dorado para título
       .fontSize(12)
       .font('Helvetica-Bold')
       .text('FACTURAR A', 322, infoTop + 10);
 
     doc
-      .fillColor('#374151')
+      .fillColor('#1F1F1F') // Gris oscuro para info del cliente
       .fontSize(10)
       .font('Helvetica')
       .text(`${data.user.firstName} ${data.user.lastName}`, 322, infoTop + 30)
@@ -304,13 +304,13 @@ export class PDFService {
     if (data.order.shippingAddress) {
       const addr = JSON.parse(data.order.shippingAddress);
       doc
-        .fillColor('#1e40af')
+        .fillColor('#FFD700') // Dorado para título
         .fontSize(10)
         .font('Helvetica-Bold')
         .text('ENVIAR A:', 322, infoTop + 75);
         
       doc
-        .fillColor('#374151')
+        .fillColor('#1F1F1F') // Gris oscuro para dirección
         .fontSize(9)
         .font('Helvetica')
         .text(addr.name || '', 322, infoTop + 90)
@@ -322,26 +322,26 @@ export class PDFService {
   private static generateInvoiceTable(doc: PDFKit.PDFDocument, order: any) {
     const invoiceTableTop = 370;
     
-    // Header de tabla con estilo
+    // Header de tabla con estilo Dark Tech
     doc
       .rect(50, invoiceTableTop, 512, 25)
-      .fillColor('#1e40af')
+      .fillColor('#1F1F1F') // Gris oscuro
       .fill();
 
     doc
-    .fillColor('#ffffff')
-    .fontSize(10)
-    .font('Helvetica-Bold')
-    // Producto
-    .text('PRODUCTO', 60, invoiceTableTop + 8)
-    // SKU
-    .text('SKU', 210, invoiceTableTop + 8)
-    // Cantidad
-    .text('CANT.', 290, invoiceTableTop + 8, { width: 50, align: 'center' })
-    // Precio unitario
-    .text('PRECIO UNIT.', 350, invoiceTableTop + 8, { width: 70, align: 'right' })
-    // Total
-    .text('TOTAL', 430, invoiceTableTop + 8, { width: 100, align: 'right' });
+      .fillColor('#FFD700') // Dorado para headers
+      .fontSize(10)
+      .font('Helvetica-Bold')
+      // Producto
+      .text('PRODUCTO', 60, invoiceTableTop + 8)
+      // SKU
+      .text('SKU', 210, invoiceTableTop + 8)
+      // Cantidad
+      .text('CANT.', 290, invoiceTableTop + 8, { width: 50, align: 'center' })
+      // Precio unitario
+      .text('PRECIO UNIT.', 350, invoiceTableTop + 8, { width: 70, align: 'right' })
+      // Total
+      .text('TOTAL', 430, invoiceTableTop + 8, { width: 100, align: 'right' });
 
     // Productos con filas alternadas
     let position = invoiceTableTop + 30;
@@ -403,14 +403,14 @@ export class PDFService {
       position += 20;
     }
 
-    // Total final con estilo destacado
+    // Total final con estilo Dark Tech
     doc
       .rect(350, position + 5, 212, 25)
-      .fillColor('#1e40af')
+      .fillColor('#FFD700') // Dorado para total
       .fill();
 
     doc
-      .fillColor('#ffffff')
+      .fillColor('#0D0D0D') // Negro para texto del total
       .fontSize(14)
       .font('Helvetica-Bold')
       .text('TOTAL:', 360, position + 12)
@@ -436,19 +436,19 @@ export class PDFService {
     }
 
     doc
-    .fillColor('#374151')
-    .fontSize(9)
-    .font('Helvetica')
-    // Item
-    .text(item, 60, y + 4, { width: 140, ellipsis: true })
-    // SKU
-    .text(sku, 210, y + 4, { width: 70 })
-    // Cantidad
-    .text(quantity, 290, y + 4, { width: 50, align: 'center' })
-    // Precio unitario
-    .text(unitPrice, 350, y + 4, { width: 70, align: 'right' })
-    // Total
-    .text(total, 430, y + 4, { width: 100, align: 'right' });
+      .fillColor('#1F1F1F') // Gris oscuro para texto de productos
+      .fontSize(9)
+      .font('Helvetica')
+      // Item
+      .text(item, 60, y + 4, { width: 140, ellipsis: true })
+      // SKU
+      .text(sku, 210, y + 4, { width: 70 })
+      // Cantidad
+      .text(quantity, 290, y + 4, { width: 50, align: 'center' })
+      // Precio unitario
+      .text(unitPrice, 350, y + 4, { width: 70, align: 'right' })
+      // Total
+      .text(total, 430, y + 4, { width: 100, align: 'right' });
   }
 
   private static generateTotalRow(
@@ -456,7 +456,7 @@ export class PDFService {
     y: number,
     label: string,
     amount: string,
-    color: string = '#374151'
+    color: string = '#1F1F1F' // Gris oscuro por defecto
   ) {
     doc
       .fillColor(color)
@@ -467,39 +467,39 @@ export class PDFService {
   }
 
   private static generateFooter(doc: PDFKit.PDFDocument, company: any) {
-  // Verificar si estamos cerca del final de la página, si es así, agregar nueva página
-  if (doc.y > 650) {
-    doc.addPage();
+    // Verificar si estamos cerca del final de la página, si es así, agregar nueva página
+    if (doc.y > 650) {
+      doc.addPage();
+    }
+
+    const footerTop = Math.max(doc.y + 30, 650); // Al menos 650 de la parte superior
+    
+    // Línea decorativa con degradado visual (dorado)
+    doc
+      .rect(50, footerTop, 512, 2)
+      .fillColor(company.primaryColor) // Dorado
+      .fill();
+
+    // Todo el footer en un solo bloque con colores Dark Tech
+    doc
+      .fillColor('#0D0D0D') // Negro carbón para agradecimiento
+      .fontSize(12)
+      .font('Helvetica-Bold')
+      .text('¡Gracias por su compra!', 50, footerTop + 15, { align: 'center', width: 512 })
+      
+      .fillColor('#1F1F1F') // Gris oscuro para instrucciones
+      .fontSize(10)
+      .font('Helvetica')
+      .text('Si tiene alguna pregunta sobre esta factura, no dude en contactarnos.', 50, footerTop + 35, { align: 'center', width: 512 })
+      
+      .fillColor('#6b7280') // Gris medio para info de contacto
+      .fontSize(8)
+      .text(`${company.name} | ${company.phone} | ${company.email}`, 50, footerTop + 55, { align: 'center', width: 512 })
+      
+      .fillColor('#9ca3af') // Gris claro para metadata
+      .fontSize(8)
+      .text(`Página 1 de 1 | Generado el ${new Date().toLocaleDateString('es-ES')}`, 50, footerTop + 70, { align: 'center', width: 512 });
   }
-
-  const footerTop = Math.max(doc.y + 30, 650); // Al menos 650 de la parte superior
-  
-  // Línea decorativa
-  doc
-    .rect(50, footerTop, 512, 2)
-    .fillColor(company.primaryColor)
-    .fill();
-
-  // TODO el footer en un solo bloque
-  doc
-    .fillColor('#374151')
-    .fontSize(12)
-    .font('Helvetica-Bold')
-    .text('¡Gracias por su compra!', 50, footerTop + 15, { align: 'center', width: 512 })
-    
-    .fillColor('#6b7280')
-    .fontSize(10)
-    .font('Helvetica')
-    .text('Si tiene alguna pregunta sobre esta factura, no dude en contactarnos.', 50, footerTop + 35, { align: 'center', width: 512 })
-    
-    .fillColor('#9ca3af')
-    .fontSize(8)
-    .text(`${company.name} | ${company.phone} | ${company.email}`, 50, footerTop + 55, { align: 'center', width: 512 })
-    
-    .fillColor('#cbd5e1')
-    .fontSize(8)
-    .text(`Página 1 de 1 | Generado el ${new Date().toLocaleDateString('es-ES')}`, 50, footerTop + 70, { align: 'center', width: 512 });
-}
 
   private static getStatusText(status: string): string {
     const statusMap: { [key: string]: string } = {

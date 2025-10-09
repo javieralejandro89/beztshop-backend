@@ -138,7 +138,7 @@ export const getSiteSettings = async (req: AuthenticatedRequest, res: Response) 
         siteDescription: 'Tienda en línea de productos especializados, Servicios de dropshipping, Venta de productos de alta demanda, Plataformas de venta de productos artesanales.',
         siteUrl: '',
         contactEmail: '',
-        contactPhone: '8325230060',
+        contactPhone: '9985780385',
         supportEmail: '',
         address: {
           street: '',
@@ -357,7 +357,7 @@ export const getPaymentSettings = async (req: AuthenticatedRequest, res: Respons
         zelle: {
           enabled: true,
           email: '',
-          phone: '8325230060'
+          phone: '9985780385'
         },
         cashOnDelivery: {
           enabled: false,
