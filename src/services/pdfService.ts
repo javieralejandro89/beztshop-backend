@@ -177,10 +177,11 @@ export class PDFService {
     try {
       // Intentar cargar el logo desde diferentes ubicaciones posibles
       const possiblePaths = [
-        path.join(process.cwd(), 'public', 'brandpdf.png'),
-        path.join(process.cwd(), '../frontend/public/brandpdf.png'),
-        path.join(process.cwd(), 'assets', 'brandpdf.png'),
-        path.join(__dirname, '../../public/brandpdf.png')
+        path.join(process.cwd(), 'public', 'assets', 'brandpdf.png'), // Producción (PM2)
+        path.join(process.cwd(), 'dist', 'public', 'assets', 'brandpdf.png'), // Después de build
+        path.join(__dirname, '../../public/assets/brandpdf.png'), // Relativo al archivo compilado
+        path.join(process.cwd(), 'public', 'brandpdf.png'), // Desarrollo
+        path.join(process.cwd(), '../frontend/public/brandpdf.png'), // Desarrollo alternativo
       ];
 
       let logoPath = null;
