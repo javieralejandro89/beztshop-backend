@@ -441,6 +441,8 @@ export const getProductBySlug = async (req: Request, res: Response) => {
       model: product.model,
       inStock: product.inStock,
       stockCount: product.trackInventory ? product.stockCount : null,
+      rating: product.rating ? Number(product.rating) : null,  // ✅ AGREGAR
+      reviewCount: product.reviewCount || 0,                    // ✅ AGREGAR
       category: product.category,
       variants: product.variants,
       reviews: product.reviews,

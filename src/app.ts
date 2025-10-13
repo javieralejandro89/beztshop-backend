@@ -24,6 +24,7 @@ import checkoutRoutes from './routes/checkoutRoutes';
 import adminRoutes from './routes/adminRoutes';
 import squareRoutes from './routes/squareRoutes';
 import newsletterRoutes from './routes/newsletterRoutes';
+import reviewRoutes from './routes/reviewRoutes';
 
 
 // Debug - verificar que las rutas se importan
@@ -234,6 +235,7 @@ app.use('/api/checkout', checkoutRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/square', squareRoutes);
 app.use('/api/newsletter', newsletterRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 
 // Debug después de registrar

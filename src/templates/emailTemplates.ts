@@ -309,3 +309,54 @@ export const newsletterTemplate = {
     `;
   }
 };
+
+// Template de notificación de nueva reseña (para admin)
+export const newReviewNotificationTemplate = (data: {
+  productName: string;
+  customerName: string;
+  rating: number;
+  comment: string;
+  reviewId: string;
+}) => {
+  const stars = '⭐'.repeat(data.rating);
+  
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <title>Nueva Reseña Publicada</title>
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #2563eb;">Nueva Reseña Publicada</h2>
+            
+            <p>Se ha recibido una nueva reseña que requiere tu revisión:</p>
+            
+            <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin-top: 0;">Producto: ${data.productName}</h3>
+                <p><strong>Cliente:</strong> ${data.customerName}</p>
+                <p><strong>Calificación:</strong> ${stars} (${data.rating}/5)</p>
+                <p><strong>Comentario:</strong></p>
+                <p style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #2563eb;">
+                  ${data.comment}
+                </p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="${process.env.FRONTEND_URL}/admin/reviews" 
+                   style="background: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                    Ver y Aprobar Reseña
+                </a>
+            </div>
+            
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                <p style="font-size: 12px; color: #6b7280;">
+                    Este es un email automático de notificación de reseña.
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+  `;
+};
