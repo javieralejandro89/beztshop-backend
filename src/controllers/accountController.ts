@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { PDFService } from '../services/pdfService';
-import squareService from '../services/squareService';
+
 
 const prisma = new PrismaClient();
 

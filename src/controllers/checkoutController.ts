@@ -7,167 +7,6 @@ import { emailService } from '../services/emailService';
 
 const prisma = new PrismaClient();
 
-// ✅ IMPORTAR FUNCIONES DE NOTIFICACIÓN
-const sendAdminOrderNotification = async (orderData: {
-  orderNumber: string;
-  customerName: string;
-  customerEmail: string;
-  total: number;
-  paymentMethod: string;
-  status: string;
-  itemsCount: number;
-  shippingAddress: any;
-}) => {
-  try {
-    const adminEmail = 'atencionalcliente@beztshop.com';
-    
-    const paymentStatusBadge = orderData.paymentMethod === 'zelle' 
-      ? '<span style="background: #fbbf24; color: #92400e; padding: 4px 8px; border-radius: 4px; font-size: 12px;">ZELLE - PENDIENTE</span>'
-      : '<span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">PENDIENTE PAGO</span>';
-
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head><meta charset="utf-8"><title>Nueva Orden Creada</title></head>
-      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-          <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="background: #dc2626; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
-                  <h2 style="margin: 0;">🔔 Nueva Orden Creada</h2>
-              </div>
-              <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px;">
-                  <h3>Pedido #${orderData.orderNumber}</h3>
-                  <div style="background: white; padding: 20px; border-radius: 8px;">
-                      <p><strong>Cliente:</strong> ${orderData.customerName}</p>
-                      <p><strong>Email:</strong> ${orderData.customerEmail}</p>
-                      <p><strong>Total:</strong> $${orderData.total.toFixed(2)} USD</p>
-                      <p><strong>Método:</strong> ${orderData.paymentMethod.toUpperCase()} ${paymentStatusBadge}</p>
-                      <p><strong>Items:</strong> ${orderData.itemsCount} producto(s)</p>
-                  </div>
-                  ${orderData.paymentMethod === 'zelle' ? `
-                      <div style="background: #fef3c7; border: 1px solid #fbbf24; padding: 15px; border-radius: 8px; margin-top: 15px;">
-                          <h4 style="color: #92400e; margin: 0;">⚠️ Pago Zelle Pendiente</h4>
-                          <p style="margin: 5px 0 0 0; color: #92400e;">Requiere confirmación manual.</p>
-                      </div>
-                  ` : ''}
-              </div>
-          </div>
-      </body>
-      </html>
-    `;
-
-    return await emailService.sendEmail({
-      to: adminEmail,
-      subject: `🔔 Nueva Orden #${orderData.orderNumber} - ${orderData.paymentMethod.toUpperCase()}`,
-      html,
-      from: 'BeztShop Sistema <atencionalcliente@beztshop.com>'
-    });
-
-  } catch (error: any) {
-    console.error('❌ Error enviando notificación al admin:', error.message);
-    throw error;
-  }
-};
-
-const sendCustomerOrderNotification = async (params: {
-  email: string;
-  customerName: string;
-  orderNumber: string;
-  total: number;
-  items: Array<{productName: string; quantity: number; price: number}>;
-  paymentMethod: string;
-  isZelle?: boolean;
-}) => {
-  try {
-    let subject, html;
-
-    if (params.isZelle) {
-      subject = `Pedido Recibido #${params.orderNumber} - Pendiente Confirmación Zelle`;
-      html = `
-        <!DOCTYPE html>
-        <html>
-        <head><meta charset="utf-8"><title>Pedido Recibido</title></head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="background: #fbbf24; color: #92400e; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
-                    <h2 style="margin: 0;">📝 Pedido Recibido</h2>
-                    <p style="margin: 5px 0 0 0;">Pendiente de Confirmación de Pago</p>
-                </div>
-                <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px;">
-                    <p>Hola <strong>${params.customerName}</strong>,</p>
-                    <p>Hemos recibido tu pedido <strong>#${params.orderNumber}</strong> exitosamente.</p>
-                    <div style="background: #fef3c7; border: 1px solid #fbbf24; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                        <h4 style="color: #92400e; margin-top: 0;">⏳ Pago por Zelle Pendiente</h4>
-                        <p style="color: #92400e; margin-bottom: 0;">Te contactaremos pronto con las instrucciones para completar el pago por Zelle.</p>
-                    </div>
-                    <div style="background: white; padding: 25px; border-radius: 8px; margin: 20px 0;">
-                        <h3 style="margin-top: 0;">Resumen del Pedido:</h3>
-                        ${params.items.map(item => `
-                            <div style="display: flex; justify-content: space-between; margin: 10px 0; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">
-                                <span>${item.productName} (x${item.quantity})</span>
-                                <span style="color: #059669;">$${(item.price * item.quantity).toFixed(2)}</span>
-                            </div>
-                        `).join('')}
-                        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; margin-top: 20px; padding-top: 15px; border-top: 2px solid #2563eb; color: #2563eb;">
-                            <span>Total:</span>
-                            <span>$${params.total.toFixed(2)} USD</span>
-                        </div>
-                    </div>
-                    <p>Gracias por confiar en <strong>BeztShop</strong>.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-      `;
-    } else {
-      subject = `¡Pedido Confirmado! #${params.orderNumber}`;
-      html = `
-        <!DOCTYPE html>
-        <html>
-        <head><meta charset="utf-8"><title>Pedido Confirmado</title></head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="background: #10b981; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;">
-                    <h2 style="margin: 0;">✅ ¡Pedido Confirmado!</h2>
-                    <p style="margin: 5px 0 0 0; opacity: 0.9;">Tu compra ha sido procesada exitosamente</p>
-                </div>
-                <div style="background: #f0fdf4; padding: 30px; border-radius: 0 0 8px 8px;">
-                    <p>Hola <strong>${params.customerName}</strong>,</p>
-                    <p>¡Gracias por tu compra! Tu pedido <strong>#${params.orderNumber}</strong> ha sido confirmado.</p>
-                    <div style="background: white; padding: 25px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
-                        <h3 style="margin-top: 0;">Resumen del Pedido:</h3>
-                        ${params.items.map(item => `
-                            <div style="display: flex; justify-content: space-between; margin: 10px 0; padding: 8px 0; border-bottom: 1px solid #f3f4f6;">
-                                <span>${item.productName} (x${item.quantity})</span>
-                                <span style="color: #059669;">$${(item.price * item.quantity).toFixed(2)}</span>
-                            </div>
-                        `).join('')}
-                        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; margin-top: 20px; padding-top: 15px; border-top: 2px solid #10b981; color: #10b981;">
-                            <span>Total:</span>
-                            <span>$${params.total.toFixed(2)} USD</span>
-                        </div>
-                    </div>
-                    <p>Te mantendremos informado sobre el estado de tu pedido.</p>
-                    <p>Gracias por confiar en <strong>BeztShop</strong>.</p>
-                </div>
-            </div>
-        </body>
-        </html>
-      `;
-    }
-
-    return await emailService.sendEmail({
-      to: params.email,
-      subject,
-      html,
-      from: 'BeztShop <atencionalcliente@beztshop.com>'
-    });
-
-  } catch (error: any) {
-    console.error('❌ Error enviando notificación al cliente:', error.message);
-    throw error;
-  }
-};
-
 // Schemas de validación
 const checkoutSessionSchema = z.object({
   items: z.array(z.object({
@@ -572,6 +411,7 @@ export const calculateOrderTotals = async (req: AuthenticatedRequest, res: Respo
 // Reemplazar la función createOrder en checkoutController.ts (línea ~168)
 // Esta versión integra Square en lugar de la simulación
 
+// Crear pedido
 export const createOrder = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const userId = req.user?.id;
@@ -652,133 +492,7 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response) => {
       return res.status(400).json({
         error: 'Dirección de envío requerida'
       });
-    }
-
-    // 🎯 AQUÍ ES DONDE VA EL CÓDIGO DE ZELLE - ANTES DE RECALCULAR TOTALES
-    // ========================================================================
-    // AGREGAR: Manejar pago Zelle
-    if (paymentMethod === 'zelle') {
-      console.log('🔄 Procesando pedido con Zelle...');
-      
-      // Recalcular totales para Zelle
-      const totalsData = await calculateOrderTotalsInternal(items, shippingMethod, couponCode);
-      
-      // ✅ USAR orderNumber del request PRIMERO
-  const orderNumber = req.body.orderNumber || 
-    `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-  
-  console.log('📋 Usando número de orden:', orderNumber);
-
-      // Crear pedido para Zelle (sin decrementar stock)
-      const order = await prisma.$transaction(async (tx) => {
-        const newOrder = await tx.order.create({
-          data: {
-            orderNumber,
-            userId,
-            subtotal: totalsData.subtotal,
-            taxAmount: totalsData.tax,
-            shippingAmount: totalsData.shippingCost,
-            discountAmount: totalsData.discount,
-            totalAmount: totalsData.total,
-            status: 'PENDING',
-            paymentStatus: 'PENDING', // NUEVO STATUS
-            paymentMethod: 'zelle',
-            shippingAddress: JSON.stringify(finalShippingAddress),
-            notes: `PAGO ZELLE PENDIENTE - ${customerNotes || ''}`.trim()
-          }
-        });
-
-        // Crear items del pedido
-        for (const orderItem of totalsData.items) {
-          await tx.orderItem.create({
-            data: {
-              orderId: newOrder.id,
-              productId: orderItem.productId,
-              productName: orderItem.productName,
-              quantity: orderItem.quantity,
-              price: orderItem.price,
-              totalPrice: orderItem.totalPrice,
-              variants: orderItem.variants ? JSON.stringify(orderItem.variants) : undefined
-            }
-          });
-        }
-
-        // NO decrementar stock aún (esperar confirmación de pago Zelle)
-        console.log('⏸️ Stock NO decrementado - esperando confirmación de pago Zelle');
-
-        // Si hay cupón aplicado, incrementar uso
-        if (totalsData.appliedCoupon) {
-          await tx.coupon.update({
-            where: { id: totalsData.appliedCoupon.id },
-            data: {
-              usageCount: {
-                increment: 1
-              }
-            }
-          });
-        }
-
-        return newOrder;
-      });
-
-      console.log(`✅ Pedido Zelle creado: ${orderNumber}`);
-
-      // ✅ ENVIAR NOTIFICACIONES PARA ZELLE (SIN FALLAR SI HAY ERROR)
-      try {
-        const customerName = `${user.firstName} ${user.lastName}`;
-        
-        // Notificación al cliente
-        await sendCustomerOrderNotification({
-          email: user.email,
-          customerName,
-          orderNumber: order.orderNumber,
-          total: Number(order.totalAmount),
-          items: totalsData.items.map(item => ({
-            productName: item.productName,
-            quantity: item.quantity,
-            price: item.price
-          })),
-          paymentMethod: 'zelle',
-          isZelle: true
-        });
-
-        // Notificación al admin
-        await sendAdminOrderNotification({
-          orderNumber: order.orderNumber,
-          customerName,
-          customerEmail: user.email,
-          total: Number(order.totalAmount),
-          paymentMethod: 'zelle',
-          status: 'PENDING',
-          itemsCount: totalsData.items.length,
-          shippingAddress: finalShippingAddress
-        });
-
-        console.log('✅ Notificaciones enviadas para pedido Zelle:', order.orderNumber);
-      } catch (emailError) {
-        console.error('❌ Error enviando notificaciones Zelle (no crítico):', emailError);
-        // No fallar la creación del pedido por error en email
-      }
-
-      return res.status(201).json({
-        message: 'Pedido creado - Pendiente de confirmación de pago Zelle',
-        order: {
-          id: order.id,
-          orderNumber: order.orderNumber,
-          status: 'pending_payment',
-          paymentStatus: 'pending',
-          total: Number(order.totalAmount),
-          items: totalsData.items.length,
-          paymentMethod: 'Zelle - Pendiente de confirmación'
-        },
-        redirectUrl: `/account/orders/${order.id}`,
-        requiresPayment: false, // No requiere procesamiento adicional
-        paymentInstructions: {
-          method: 'zelle',
-          message: 'Tu pedido ha sido creado. Te contactaremos cuando confirmemos tu pago por Zelle.'
-        }
-      });
-    }
+    } 
 
     // Recalcular totales para seguridad
     const totalsData = await calculateOrderTotalsInternal(items, shippingMethod, couponCode);
@@ -852,50 +566,7 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response) => {
     });
 
     console.log(`Pedido creado: ${orderNumber} por usuario ${userId}`);
-
-    // ✅ ENVIAR NOTIFICACIONES PARA MÉTODOS NORMALES (SIN FALLAR SI HAY ERROR)
-    try {
-      const customerName = `${user.firstName} ${user.lastName}`;
-      
-      // Notificación al cliente
-      await sendCustomerOrderNotification({
-        email: user.email,
-        customerName,
-        orderNumber: order.orderNumber,
-        total: Number(order.totalAmount),
-        items: totalsData.items.map(item => ({
-          productName: item.productName,
-          quantity: item.quantity,
-          price: item.price
-        })),
-        paymentMethod,
-        isZelle: false
-      });
-
-      // Notificación al admin
-      await sendAdminOrderNotification({
-        orderNumber: order.orderNumber,
-        customerName,
-        customerEmail: user.email,
-        total: Number(order.totalAmount),
-        paymentMethod,
-        status: 'PENDING',
-        itemsCount: totalsData.items.length,
-        shippingAddress: finalShippingAddress
-      });
-
-      console.log('✅ Notificaciones enviadas para pedido:', order.orderNumber);
-    } catch (emailError) {
-      console.error('❌ Error enviando notificaciones (no crítico):', emailError);
-      // No fallar la creación del pedido por error en email
-    }
-
-    // **NUEVA INTEGRACIÓN CON SQUARE**
-    // En lugar de simular el pago, devolvemos la información necesaria
-    // para que el frontend procese el pago con Square
     
-    // El pago real se procesará cuando el frontend llame a /api/square/process-payment
-    // con el token generado por Square Web Payments SDK
 
     res.status(201).json({
       message: 'Pedido creado exitosamente',
@@ -906,27 +577,11 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response) => {
         paymentStatus: 'pending',
         total: Number(order.totalAmount),
         items: totalsData.items.length,
-        currency: 'USD', // o tu moneda preferida
-        // Información adicional para Square
-        paymentData: {
-          orderId: order.id,
-          amount: Number(order.totalAmount),
-          currency: 'USD',
-          buyerEmail: req.user?.email,
-          shippingAddress: {
-            addressLine1: finalShippingAddress.street,
-            locality: finalShippingAddress.city,
-            administrativeDistrictLevel1: finalShippingAddress.state,
-            postalCode: finalShippingAddress.zipCode,
-            country: finalShippingAddress.country
-          }
-        }
-      },
-      // El frontend usará esta URL después del pago exitoso
-      redirectUrl: `/account/orders/${order.id}`,
-      // Indicar que el pago debe procesarse
-      requiresPayment: true
-    });
+        currency: 'USD'
+     },
+     redirectUrl: `/account/orders/${order.id}`,
+     requiresPayment: true
+   });
 
   } catch (error: any) {
     console.error('Error creating order:', error);

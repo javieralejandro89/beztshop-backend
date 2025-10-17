@@ -119,6 +119,7 @@ model Product {
   cartItems    CartItem[]
   reviews      ProductReview[]
   wishlistItems WishlistItem[]
+  mlProducts   MercadoLibreProduct[]
   
   @@map("products")
   @@index([slug])
@@ -394,6 +395,36 @@ model NewsletterCampaignSent {
   @@index([userId])
   @@index([guestSubscriberId])
   @@index([email])
+}
+
+// Autenticación de Mercado Libre
+model MercadoLibreAuth {
+  id           String   @id @default(cuid())
+  accessToken  String   @db.Text
+  refreshToken String   @db.Text
+  mlUserId     String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  @@map("mercadolibre_auth")
+}
+
+// Productos publicados en Mercado Libre
+model MercadoLibreProduct {
+  id        String   @id @default(cuid())
+  productId String
+  mlItemId  String   @unique
+  permalink String?
+  status    String   @default("active")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@map("mercadolibre_products")
+  @@index([productId])
+  @@index([mlItemId])
 }
 
 enum UserRole {

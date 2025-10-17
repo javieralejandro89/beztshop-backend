@@ -22,9 +22,10 @@ import accountRoutes from './routes/accountRoutes';
 import wishlistRoutes from './routes/wishlistRoutes';
 import checkoutRoutes from './routes/checkoutRoutes';
 import adminRoutes from './routes/adminRoutes';
-import squareRoutes from './routes/squareRoutes';
+import stripeRoutes from './routes/stripeRoutes';
 import newsletterRoutes from './routes/newsletterRoutes';
 import reviewRoutes from './routes/reviewRoutes';
+import mercadolibreRoutes from './routes/mercadolibreRoutes';
 
 
 // Debug - verificar que las rutas se importan
@@ -233,9 +234,10 @@ app.use('/api/account', accountRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/square', squareRoutes);
+app.use('/api/stripe', stripeRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/mercadolibre', mercadolibreRoutes);
 
 
 // Debug después de registrar
