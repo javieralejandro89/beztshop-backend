@@ -5,8 +5,7 @@ import {
   getCheckoutSession,
   validateCoupon,
   calculateOrderTotals,
-  createOrder,
-  getShippingMethods
+  createOrder  
 } from '../controllers/checkoutController';
 import { authenticateToken } from '../middleware/auth';
 import rateLimit from 'express-rate-limit';
@@ -45,9 +44,6 @@ router.use(checkoutLimiter);
 
 // Obtener información inicial del checkout (direcciones, métodos de pago, etc.)
 router.get('/session', getCheckoutSession);
-
-// Obtener métodos de envío disponibles
-router.get('/shipping-methods', getShippingMethods);
 
 // Validar cupón de descuento
 router.post('/validate-coupon', validateCoupon);

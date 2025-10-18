@@ -44,7 +44,7 @@ const sendAdminOrderNotification = async (orderData: {
                   <div style="background: white; padding: 20px; border-radius: 8px; margin: 15px 0;">
                       <p><strong>Cliente:</strong> ${orderData.customerName}</p>
                       <p><strong>Email:</strong> ${orderData.customerEmail}</p>
-                      <p><strong>Total:</strong> $${orderData.total.toFixed(2)} USD</p>
+                      <p><strong>Total:</strong> $${orderData.total.toFixed(2)} MXN</p>
                       <p><strong>Método de pago:</strong> ${orderData.paymentMethod}</p>
                       <p><strong>Productos:</strong> ${orderData.itemsCount} artículo(s)</p>
                       <p><strong>Estado:</strong> <span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 4px;">PAGADO</span></p>
@@ -226,14 +226,39 @@ router.post('/confirm-payment', authenticateToken, async (req: AuthenticatedRequ
     }
 
     // Calcular envío
-    const shippingRates: { [key: string]: number } = {
-      standard: 15,
-      express: 25,
-      overnight: 45
-    };
-    
-    let shippingCost = shippingRates[orderData.shippingMethod] || 15;
-    if (subtotal >= 100) shippingCost = 0;
+    const freeShippingThreshold = 299;
+
+// Calcular peso total
+let totalWeight = 0;
+for (const item of orderItems) {
+  const product = products.find(p => p.id === item.productId);
+  if (product && product.weight) {
+    totalWeight += Number(product.weight) * item.quantity;
+  }
+}
+
+if (totalWeight === 0) {
+  totalWeight = orderItems.reduce((sum, item) => sum + item.quantity, 0) * 0.5;
+}
+
+// Calcular costo de envío
+let shippingCost = 0;
+if (subtotal >= freeShippingThreshold) {
+  shippingCost = 0;
+} else {
+  if (totalWeight <= 1) {
+    shippingCost = 70;
+  } else if (totalWeight <= 3) {
+    shippingCost = 80;
+  } else if (totalWeight <= 5) {
+    shippingCost = 90;
+  } else if (totalWeight <= 10) {
+    shippingCost = 95;
+  } else {
+    shippingCost = 150 + ((totalWeight - 10) * 15);
+  }
+  shippingCost = Math.min(shippingCost, 250);
+}
 
     // Aplicar cupón
     let discount = 0;
@@ -273,8 +298,8 @@ router.post('/confirm-payment', authenticateToken, async (req: AuthenticatedRequ
       }
     }
 
-    const tax = (subtotal - discount) * 0.08;
-    const total = subtotal - discount + shippingCost + tax;
+    const tax = 0;
+    const total = subtotal - discount + shippingCost;
 
     // Obtener detalles de la tarjeta usada
     const paymentMethodDetails = await stripeService.getPaymentMethod(paymentIntentId);

@@ -49,8 +49,8 @@ const siteSettingsSchema = z.object({
   }).optional(),
   logo: z.string().optional(),
   favicon: z.string().optional(),
-  currency: z.string().default('USD'),
-  timezone: z.string().default('America/New_York'),
+  currency: z.string().default('MXN'),
+  timezone: z.string().default('America/Ciudad_de_Mexico'),
   language: z.string().default('es')
 });
 
@@ -142,10 +142,10 @@ export const getSiteSettings = async (req: AuthenticatedRequest, res: Response) 
         supportEmail: '',
         address: {
           street: '',
-          city: 'Houston',
-          state: 'TX',
+          city: 'Ciudad de México',
+          state: 'CDMX',
           zipCode: '',
-          country: 'Estados Unidos'
+          country: 'México'
         },
         socialMedia: {
           facebook: '',
@@ -153,8 +153,8 @@ export const getSiteSettings = async (req: AuthenticatedRequest, res: Response) 
           tiktok: 'tiktok',
           youtube: 'YouTube'
         },
-        currency: 'USD',
-        timezone: 'America/Chicago',
+        currency: 'MXN',
+        timezone: 'America/Ciudad_de_Mexico',
         language: 'es'
       };
 

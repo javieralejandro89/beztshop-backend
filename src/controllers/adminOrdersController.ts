@@ -851,7 +851,7 @@ export const adminOrderNotificationTemplate = (data: {
                         </tr>
                         <tr>
                             <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;"><strong>Total:</strong></td>
-                            <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; font-weight: bold; color: #059669;">${data.total.toFixed(2)} USD</td>
+                            <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb; font-weight: bold; color: #059669;">${data.total.toFixed(2)} MXN</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px 0; border-bottom: 1px solid #e5e7eb;"><strong>Método de Pago:</strong></td>
@@ -1001,7 +1001,7 @@ async function sendCustomerOrderNotification(params: {
                         `).join('')}
                         <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; margin-top: 20px; padding-top: 15px; border-top: 2px solid #2563eb; color: #2563eb;">
                             <span>Total:</span>
-                            <span>${params.total.toFixed(2)} USD</span>
+                            <span>${params.total.toFixed(2)} MXN</span>
                         </div>
                     </div>
                     
@@ -1044,7 +1044,7 @@ async function sendCustomerOrderNotification(params: {
                         `).join('')}
                         <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; margin-top: 20px; padding-top: 15px; border-top: 2px solid #10b981; color: #10b981;">
                             <span>Total:</span>
-                            <span>${params.total.toFixed(2)} USD</span>
+                            <span>${params.total.toFixed(2)} MXN</span>
                         </div>
                     </div>
                     

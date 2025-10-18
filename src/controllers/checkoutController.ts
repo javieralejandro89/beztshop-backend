@@ -24,8 +24,7 @@ const checkoutSessionSchema = z.object({
     zipCode: z.string().min(1),
     country: z.string().default('México'),
     phone: z.string().optional()
-  }).optional(),
-  shippingMethod: z.enum(['standard', 'express', 'overnight']).default('standard'),
+  }).optional(),  
   paymentMethod: z.enum(['card', 'paypal', 'bank_transfer', 'cash_on_delivery', 'zelle']),
   orderNumber: z.string().optional(),
   couponCode: z.string().optional(),
@@ -86,22 +85,14 @@ export const getCheckoutSession = async (req: AuthenticatedRequest, res: Respons
       ]
     });
 
-    // Métodos de envío disponibles
-    const shippingMethods = [
-      { id: 'standard', name: 'Envío Estándar', price: 15, estimatedDays: '5-7', description: 'Entrega en 5-7 días hábiles' },
-      { id: 'express', name: 'Envío Rápido', price: 25, estimatedDays: '2-3', description: 'Entrega en 2-3 días hábiles' },
-      { id: 'overnight', name: 'Envío Overnight', price: 45, estimatedDays: '1', description: 'Entrega al siguiente día hábil' }
-    ];
-
     res.json({
-      addresses,
-      paymentMethods,
-      shippingMethods,
-      config: {
-        freeShippingThreshold: 100,
-        taxRate: 0.08 // 8% de impuesto
-      }
-    });
+  addresses,
+  paymentMethods,
+  config: {
+    freeShippingThreshold: 299,
+    taxRate: 0
+  }
+});
 
   } catch (error) {
     console.error('Error getting checkout session:', error);
@@ -256,8 +247,7 @@ export const validateCoupon = async (req: AuthenticatedRequest, res: Response) =
 
 // Función auxiliar para calcular totales (no exportada, solo interna)
 const calculateOrderTotalsInternal = async (
-  items: any[], 
-  shippingMethod: string = 'standard', 
+  items: any[],   
   couponCode?: string
 ): Promise<OrderTotalsData> => {
   if (!items || !Array.isArray(items) || items.length === 0) {
@@ -316,19 +306,43 @@ if (product.trackInventory && product.stockCount < item.quantity) {
   }
 
   // Calcular envío
-  const shippingRates = {
-    standard: 15,
-    express: 25,
-    overnight: 45
-  };
-  
-  const freeShippingThreshold = 100;
-  let shippingCost = shippingRates[shippingMethod as keyof typeof shippingRates] || 15;
-  
-  // Aplicar envío gratuito si aplica
-  if (subtotal >= freeShippingThreshold) {
-    shippingCost = 0;
+  const freeShippingThreshold = 299; // MXN - Alineado con Mercado Libre
+
+// Calcular peso total del pedido
+let totalWeight = 0;
+for (const item of items) {
+  const product = products.find(p => p.id === item.productId);
+  if (product && product.weight) {
+    totalWeight += Number(product.weight) * item.quantity;
   }
+}
+
+// Estimar peso si no está definido
+if (totalWeight === 0) {
+  totalWeight = items.reduce((sum, item) => sum + item.quantity, 0) * 0.5; // 0.5kg por item
+}
+
+// Calcular costo de envío por rangos de peso (tarifas realistas México)
+let shippingCost = 0;
+if (subtotal >= freeShippingThreshold) {
+  shippingCost = 0; // Envío gratis
+} else {
+  if (totalWeight <= 1) {
+    shippingCost = 70; // ~$70 para hasta 1kg
+  } else if (totalWeight <= 3) {
+    shippingCost = 80; // ~$95 para 1-3kg
+  } else if (totalWeight <= 5) {
+    shippingCost = 90; // ~$120 para 3-5kg
+  } else if (totalWeight <= 10) {
+    shippingCost = 95; // ~$150 para 5-10kg
+  } else {
+    // Para más de 10kg, cobrar por kg adicional
+    shippingCost = 150 + ((totalWeight - 10) * 15); // $15 por kg extra
+  }
+  
+  // Tope máximo realista
+  shippingCost = Math.min(shippingCost, 250); // Máximo $250 MXN
+}
 
   // Validar y aplicar cupón si existe
   let discount = 0;
@@ -377,10 +391,10 @@ if (product.trackInventory && product.stockCount < item.quantity) {
 
   // Calcular impuesto (después del descuento)
   const taxableAmount = Math.max(0, subtotal - discount);
-  const tax = taxableAmount * 0.08; // 8% de impuesto
+  const tax = 0; // 0% de impuesto
 
   // Total final
-  const total = subtotal - discount + shippingCost + tax;
+  const total = subtotal - discount + shippingCost;
 
   return {
     subtotal,
@@ -396,20 +410,14 @@ if (product.trackInventory && product.stockCount < item.quantity) {
 // Calcular totales del pedido (endpoint público)
 export const calculateOrderTotals = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { items, shippingMethod = 'standard', couponCode } = req.body;
-
-    const totals = await calculateOrderTotalsInternal(items, shippingMethod, couponCode);
+    const { items, couponCode } = req.body;
+    const totals = await calculateOrderTotalsInternal(items, couponCode);
     res.json(totals);
-
   } catch (error: any) {
     console.error('Error calculating order totals:', error);
     res.status(500).json({ error: error.message || 'Error interno del servidor' });
   }
 };
-
-// Crear pedido
-// Reemplazar la función createOrder en checkoutController.ts (línea ~168)
-// Esta versión integra Square en lugar de la simulación
 
 // Crear pedido
 export const createOrder = async (req: AuthenticatedRequest, res: Response) => {
@@ -436,8 +444,7 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response) => {
     const {
       items,
       shippingAddressId,
-      shippingAddress,
-      shippingMethod,
+      shippingAddress,      
       paymentMethod,
       couponCode,
       customerNotes
@@ -495,7 +502,7 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response) => {
     } 
 
     // Recalcular totales para seguridad
-    const totalsData = await calculateOrderTotalsInternal(items, shippingMethod, couponCode);
+    const totalsData = await calculateOrderTotalsInternal(items, couponCode);
 
     // Generar número de pedido único
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
@@ -577,7 +584,7 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response) => {
         paymentStatus: 'pending',
         total: Number(order.totalAmount),
         items: totalsData.items.length,
-        currency: 'USD'
+        currency: 'MXN'
      },
      redirectUrl: `/account/orders/${order.id}`,
      requiresPayment: true
@@ -592,52 +599,4 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response) => {
   
 };
 
-// Simular procesamiento de pago
-async function simulatePayment(paymentMethod: string, amount: number): Promise<boolean> {
-  // Simular delay de procesamiento
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Simular tasa de éxito del 95%
-  return Math.random() > 0.05;
-}
 
-// Obtener métodos de envío
-export const getShippingMethods = async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { subtotal = 0 } = req.query;
-    const freeShippingThreshold = 100;
-
-    const shippingMethods = [
-      {
-        id: 'standard',
-        name: 'Envío Estándar',
-        description: 'Entrega en 5-7 días hábiles',
-        price: Number(subtotal) >= freeShippingThreshold ? 0 : 15,
-        estimatedDays: '5-7',
-        isFree: Number(subtotal) >= freeShippingThreshold
-      },
-      {
-        id: 'express',
-        name: 'Envío Rápido',
-        description: 'Entrega en 2-3 días hábiles',
-        price: 25,
-        estimatedDays: '2-3',
-        isFree: false
-      },
-      {
-        id: 'overnight',
-        name: 'Envío Overnight',
-        description: 'Entrega al siguiente día hábil',
-        price: 45,
-        estimatedDays: '1',
-        isFree: false
-      }
-    ];
-
-    res.json({ shippingMethods });
-
-  } catch (error) {
-    console.error('Error getting shipping methods:', error);
-    res.status(500).json({ error: 'Error interno del servidor' });
-  }
-};

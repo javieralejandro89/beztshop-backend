@@ -344,7 +344,7 @@ export const newReviewNotificationTemplate = (data: {
             </div>
             
             <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.FRONTEND_URL}/admin/reviews" 
+                <a href="${process.env.FRONTEND_URL}/admin/settings/reviews/${data.reviewId}" 
                    style="background: #2563eb; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
                     Ver y Aprobar Reseña
                 </a>

@@ -204,7 +204,7 @@ model Order {
   shippingAmount  Decimal     @db.Decimal(10, 2) @default(0)
   discountAmount  Decimal     @db.Decimal(10, 2) @default(0)
   totalAmount     Decimal     @db.Decimal(10, 2)
-  currency        String      @default("USD")
+  currency        String      @default("MXN")
   status          OrderStatus @default(PENDING)
   paymentStatus   PaymentStatus @default(PENDING)
   paymentMethod   String?
