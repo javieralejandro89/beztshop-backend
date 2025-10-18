@@ -44,7 +44,7 @@ model User {
 model UserSession {
   id        String   @id @default(cuid())
   userId    String
-  token     String   @unique
+  token     String   @unique @db.VarChar(1000)
   expiresAt DateTime
   createdAt DateTime @default(now())
   
