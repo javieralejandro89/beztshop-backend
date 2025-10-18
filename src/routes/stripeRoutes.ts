@@ -28,7 +28,7 @@ const sendAdminOrderNotification = async (orderData: {
   itemsCount: number;
 }) => {
   try {
-    const adminEmail = 'contacto@serviprogarcia.com';
+    const adminEmail = 'atencionalcliente@gmail.com';
     
     const html = `
       <!DOCTYPE html>
@@ -60,7 +60,7 @@ const sendAdminOrderNotification = async (orderData: {
       to: adminEmail,
       subject: `🔔 Nueva Orden #${orderData.orderNumber} - Pagada`,
       html,
-      from: 'ServiPro Garcia Sistema <contacto@serviprogarcia.com>'
+      from: 'BeztShop <atencionalcliente@beztshop.com>'
     });
 
     console.log('✅ Notificación enviada al admin');
@@ -103,7 +103,7 @@ const sendCustomerOrderNotification = async (params: {
                       `).join('')}
                       <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; margin-top: 20px; padding-top: 15px; border-top: 2px solid #10b981; color: #10b981;">
                           <span>Total Pagado:</span>
-                          <span>$${params.total.toFixed(2)} USD</span>
+                          <span>$${params.total.toFixed(2)} MXN</span>
                       </div>
                   </div>
                   
@@ -114,7 +114,7 @@ const sendCustomerOrderNotification = async (params: {
                   </div>
                   
                   <p>Te mantendremos informado sobre el estado de tu pedido y te notificaremos cuando sea enviado.</p>
-                  <p>Gracias por confiar en <strong>ServiPro Garcia LLC</strong>.</p>
+                  <p>Gracias por confiar en <strong>BeztShop</strong>.</p>
               </div>
           </div>
       </body>
@@ -125,7 +125,7 @@ const sendCustomerOrderNotification = async (params: {
       to: params.email,
       subject: `✅ Pedido Confirmado #${params.orderNumber}`,
       html,
-      from: 'ServiPro Garcia LLC <contacto@serviprogarcia.com>'
+      from: 'BeztShop <atencionalcliente@beztshop.com>'
     });
 
     console.log('✅ Notificación enviada al cliente:', params.email);
