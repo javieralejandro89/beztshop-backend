@@ -1,4 +1,4 @@
-// src/services/mercadolibreService.ts - MEJORADO
+// src/services/mercadolibreService.ts - CORREGIDO SEGÚN API OFICIAL DE ML
 import axios from 'axios';
 import { prisma } from '../app';
 
@@ -28,12 +28,10 @@ class MercadoLibreService {
     }
   }
 
-  // 1. Generar URL de autorización
   getAuthUrl(): string {
     return `${ML_AUTH_URL}?response_type=code&client_id=${this.clientId}&redirect_uri=${encodeURIComponent(this.redirectUri)}`;
   }
 
-  // 2. Obtener tokens con código de autorización
   async getTokensFromCode(code: string): Promise<MercadoLibreTokens> {
     try {
       const response = await axios.post(ML_TOKEN_URL, null, {
@@ -53,7 +51,6 @@ class MercadoLibreService {
     }
   }
 
-  // 3. Refrescar token de acceso
   async refreshAccessToken(refreshToken: string): Promise<MercadoLibreTokens> {
     try {
       const response = await axios.post(ML_TOKEN_URL, null, {
@@ -72,7 +69,6 @@ class MercadoLibreService {
     }
   }
 
-  // 4. Obtener token válido desde BD
   async getValidAccessToken(): Promise<string> {
     const mlAuth = await prisma.mercadoLibreAuth.findFirst({
       orderBy: { createdAt: 'desc' },
@@ -82,7 +78,6 @@ class MercadoLibreService {
       throw new Error('No hay autorización de Mercado Libre configurada');
     }
 
-    // Verificar si el token está por expirar (renovar si quedan menos de 10 minutos)
     const expiresAt = new Date(mlAuth.expiresAt);
     const now = new Date();
     const minutesUntilExpiry = (expiresAt.getTime() - now.getTime()) / (1000 * 60);
@@ -106,7 +101,149 @@ class MercadoLibreService {
     return mlAuth.accessToken;
   }
 
-  // 5. Publicar producto en Mercado Libre - MEJORADO
+  // ✅ NUEVO: Obtener categoría LEAF válida
+  async getValidLeafCategory(title: string, siteId: string, accessToken: string): Promise<string> {
+    try {
+      // 1. Primero intentar predecir categoría
+      console.log(`🔍 Prediciendo categoría para: "${title}"`);
+      
+      const predictResponse = await axios.get(
+        `${ML_API_URL}/sites/${siteId}/category_predictor/predict`,
+        {
+          params: { title },
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+
+      const predictedCategory = predictResponse.data.id;
+      console.log(`📂 Categoría predicha: ${predictedCategory}`);
+
+      // 2. Verificar si es una categoría leaf
+      const categoryDetails = await axios.get(
+        `${ML_API_URL}/categories/${predictedCategory}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+
+      // Una categoría es "leaf" si children_categories está vacío
+      const isLeaf = !categoryDetails.data.children_categories || 
+                     categoryDetails.data.children_categories.length === 0;
+
+      if (isLeaf) {
+        console.log(`✅ Categoría ${predictedCategory} es leaf, usando esta`);
+        return predictedCategory;
+      }
+
+      // 3. Si no es leaf, buscar la primera subcategoría leaf
+      console.log(`⚠️ Categoría ${predictedCategory} no es leaf, buscando subcategoría...`);
+      
+      if (categoryDetails.data.children_categories && 
+          categoryDetails.data.children_categories.length > 0) {
+        
+        // Tomar la primera subcategoría
+        const firstChild = categoryDetails.data.children_categories[0];
+        console.log(`🔄 Intentando con subcategoría: ${firstChild.id}`);
+        
+        // Verificar recursivamente
+        const childDetails = await axios.get(
+          `${ML_API_URL}/categories/${firstChild.id}`,
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }
+        );
+
+        const childIsLeaf = !childDetails.data.children_categories || 
+                            childDetails.data.children_categories.length === 0;
+
+        if (childIsLeaf) {
+          console.log(`✅ Subcategoría ${firstChild.id} es leaf, usando esta`);
+          return firstChild.id;
+        }
+
+        // Si tampoco es leaf, tomar la primera subcategoría de esta
+        if (childDetails.data.children_categories && 
+            childDetails.data.children_categories.length > 0) {
+          const leafCategory = childDetails.data.children_categories[0].id;
+          console.log(`✅ Usando categoría final: ${leafCategory}`);
+          return leafCategory;
+        }
+      }
+
+      // Fallback si no encuentra nada
+      throw new Error('No se pudo encontrar una categoría leaf válida');
+      
+    } catch (error: any) {
+      console.error('⚠️ Error en predicción de categoría:', error.message);
+      
+      // Fallbacks específicos por tipo de producto
+      return this.getFallbackLeafCategory(title, siteId);
+    }
+  }
+
+  // ✅ NUEVO: Categorías leaf de fallback
+  private getFallbackLeafCategory(title: string, siteId: string): string {
+    const titleLower = title.toLowerCase();
+    
+    console.log(`🔧 Usando categoría fallback para: "${title}"`);
+
+    // Laptops y Computadoras
+    if (titleLower.includes('macbook') || titleLower.includes('laptop')) {
+      return 'MLM1652'; // Laptops y Accesorios > Laptops
+    }
+    
+    // Smartphones específicos
+    if (titleLower.includes('iphone')) {
+      return 'MLM1055'; // Celulares y Smartphones > Apple iPhone
+    }
+    if (titleLower.includes('samsung') && (titleLower.includes('galaxy') || titleLower.includes('s24'))) {
+      return 'MLM395543'; // Celulares y Smartphones > Samsung Galaxy
+    }
+    
+    // Tablets
+    if (titleLower.includes('ipad')) {
+      return 'MLM1499'; // Tablets y Accesorios > Tablets
+    }
+    
+    // Audífonos
+    if (titleLower.includes('airpods') || titleLower.includes('audifonos') || titleLower.includes('auriculares')) {
+      return 'MLM1435'; // Audio > Audífonos
+    }
+    
+    // Smartwatches
+    if (titleLower.includes('watch') || titleLower.includes('reloj')) {
+      return 'MLM431230'; // Relojes y Joyas > Smartwatches y Accesorios
+    }
+
+    // Accesorios de celular
+    if (titleLower.includes('funda') || titleLower.includes('case') || titleLower.includes('protector')) {
+      return 'MLM4941'; // Accesorios para Celulares > Fundas y Estuches
+    }
+
+    // Default: Celulares genérico (muy usado)
+    console.log(`⚠️ No hay fallback específico, usando categoría genérica de celulares`);
+    return 'MLM1055'; // Celulares y Smartphones
+  }
+
+  // ✅ NUEVO: Obtener configuración de envío del usuario
+  async getUserShippingModes(accessToken: string): Promise<string[]> {
+    try {
+      const userInfo = await axios.get(`${ML_API_URL}/users/me`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      // Verificar modos de envío disponibles
+      const shippingModes = userInfo.data.shipping_modes || [];
+      console.log(`📦 Modos de envío disponibles para el usuario:`, shippingModes);
+      
+      return shippingModes;
+    } catch (error: any) {
+      console.error('⚠️ Error obteniendo modos de envío:', error.message);
+      return ['me2']; // Default a ME2 (Mercado Envíos Flex)
+    }
+  }
+
+  // 5. Publicar producto - CORREGIDO
   async publishProduct(productId: string, siteId: string = 'MLM') {
     try {
       const accessToken = await this.getValidAccessToken();
@@ -123,35 +260,72 @@ class MercadoLibreService {
 
       console.log(`📤 Publicando producto: ${product.name}`);
 
-      // Mapear categoría
-      const mlCategoryId = await this.suggestCategory(product.name, siteId, accessToken);
-      console.log(`📂 Categoría ML sugerida: ${mlCategoryId}`);
+      // ✅ PASO 1: Obtener categoría LEAF válida
+      const mlCategoryId = await this.getValidLeafCategory(
+        product.name, 
+        siteId, 
+        accessToken
+      );
+
+      // ✅ PASO 2: Obtener modos de envío del usuario
+      const userShippingModes = await this.getUserShippingModes(accessToken);
 
       // Preparar imágenes
       const images = Array.isArray(product.images) 
         ? product.images
             .filter((img: any) => img && img.url)
-            .slice(0, 10) // ML permite máximo 10 imágenes
+            .slice(0, 10)
             .map((img: any) => ({ source: img.url }))
         : [];
 
       if (images.length === 0) {
-        console.warn('⚠️ Producto sin imágenes, usando placeholder');
-        // Podrías agregar una imagen placeholder aquí si quieres
+        throw new Error('El producto debe tener al menos 1 imagen');
       }
 
       // Preparar descripción
       const description = product.description || product.shortDesc || product.name;
-      const descriptionText = description.substring(0, 50000); // Límite de ML
+      const descriptionText = description.substring(0, 50000);
 
-      // Preparar título (ML tiene límite de 60 caracteres)
-      let title = product.name.substring(0, 60);
+      // Preparar título (límite de 60 caracteres)
+      let title = product.name;
       if (product.brand && !title.toLowerCase().includes(product.brand.toLowerCase())) {
-        title = `${product.brand} ${product.name}`.substring(0, 60);
+        title = `${product.brand} ${product.name}`;
+      }
+      title = title.substring(0, 60);
+
+      // ✅ PASO 3: Configurar envío correctamente
+      let shippingConfig: any;
+      
+      if (userShippingModes.includes('me2')) {
+        // Usuario tiene ME2 (Mercado Envíos Flex)
+        shippingConfig = {
+          mode: 'me2',
+          methods: [],
+          dimensions: null,
+          local_pick_up: true,
+          free_shipping: false,
+          logistic_type: 'xd_drop_off', // Drop off en puntos Mercado Libre
+        };
+      } else if (userShippingModes.includes('custom')) {
+        // Usuario gestiona envío por su cuenta
+        shippingConfig = {
+          mode: 'custom',
+          local_pick_up: true,
+          free_shipping: false,
+        };
+      } else {
+        // Default: not_specified
+        shippingConfig = {
+          mode: 'not_specified',
+          local_pick_up: true,
+          free_shipping: false,
+        };
       }
 
-      // ✅ MEJORA: Intentar con 'free' primero, que siempre funciona
-      const itemData = {
+      console.log(`📦 Configuración de envío:`, shippingConfig);
+
+      // ✅ PASO 4: Preparar body final
+      const itemData: any = {
         title,
         category_id: mlCategoryId,
         price: Number(product.price),
@@ -159,33 +333,41 @@ class MercadoLibreService {
         available_quantity: product.stockCount,
         buying_mode: 'buy_it_now',
         condition: 'new',
-        listing_type_id: 'free', // ✅ Usar 'free' que siempre funciona
+        listing_type_id: 'free', // Publicación gratuita
         description: {
           plain_text: descriptionText,
         },
         pictures: images,
-        shipping: {
-          mode: 'me2', // El vendedor gestiona el envío
-          local_pick_up: true,
-          free_shipping: false,
-        },
-        // ✅ Agregar atributos opcionales si los tienes
-        ...(product.brand && { 
-          attributes: [
-            { id: 'BRAND', value_name: product.brand }
-          ]
-        })
+        shipping: shippingConfig,
+        sale_terms: [
+          {
+            id: 'WARRANTY_TYPE',
+            value_name: 'Garantía del vendedor'
+          },
+          {
+            id: 'WARRANTY_TIME',
+            value_name: '30 días'
+          }
+        ]
       };
 
-      console.log('📦 Datos a publicar:', {
+      // Agregar atributos si es posible
+      if (product.brand) {
+        itemData.attributes = [
+          { id: 'BRAND', value_name: product.brand }
+        ];
+      }
+
+      console.log(`📦 Datos finales a publicar:`, {
         title: itemData.title,
         price: itemData.price,
         stock: itemData.available_quantity,
         category: itemData.category_id,
-        images: itemData.pictures.length
+        images: itemData.pictures.length,
+        shipping: itemData.shipping.mode
       });
 
-      // Publicar en ML
+      // ✅ PASO 5: Publicar en ML
       const response = await axios.post(
         `${ML_API_URL}/items`,
         itemData,
@@ -198,9 +380,10 @@ class MercadoLibreService {
       );
 
       const mlItem = response.data;
-      console.log('✅ Producto publicado en ML:', mlItem.id);
+      console.log(`✅ Producto publicado en ML: ${mlItem.id}`);
+      console.log(`🔗 Permalink: ${mlItem.permalink}`);
 
-      // Guardar relación en BD
+      // Guardar en BD
       await prisma.mercadoLibreProduct.create({
         data: {
           productId: product.id,
@@ -224,17 +407,20 @@ class MercadoLibreService {
         status: error.response?.status
       });
 
-      // Mejorar mensaje de error
       let errorMessage = 'Error al publicar en Mercado Libre';
       
       if (error.response?.data) {
         const mlError = error.response.data;
         if (mlError.message) {
           errorMessage = mlError.message;
-        } else if (mlError.error === 'invalid_token') {
-          errorMessage = 'Token inválido. Vuelve a autorizar con Mercado Libre.';
-        } else if (mlError.cause) {
-          errorMessage = `Error: ${mlError.cause.map((c: any) => c.message).join(', ')}`;
+        } else if (mlError.cause && Array.isArray(mlError.cause)) {
+          const errorMessages = mlError.cause
+            .filter((c: any) => c.type === 'error')
+            .map((c: any) => c.message);
+          
+          if (errorMessages.length > 0) {
+            errorMessage = errorMessages.join('; ');
+          }
         }
       }
 
@@ -242,46 +428,11 @@ class MercadoLibreService {
     }
   }
 
-  // 6. Sugerir categoría de ML basada en el título del producto - MEJORADO
+  // 6. Sugerir categoría (mantener por compatibilidad)
   async suggestCategory(title: string, siteId: string, accessToken: string): Promise<string> {
-    try {
-      const response = await axios.get(
-        `${ML_API_URL}/sites/${siteId}/category_predictor/predict`,
-        {
-          params: { title },
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
-
-      const categoryId = response.data.id;
-      console.log(`📂 Categoría sugerida para "${title}": ${categoryId}`);
-      return categoryId;
-    } catch (error: any) {
-      console.error('⚠️ Error suggesting category, usando fallback:', error.message);
-      
-      // ✅ MEJORA: Categorías fallback más específicas según keywords
-      const titleLower = title.toLowerCase();
-      
-      // Electrónica
-      if (titleLower.includes('iphone') || titleLower.includes('celular') || titleLower.includes('smartphone')) {
-        return 'MLM1051'; // Celulares y Teléfonos
-      }
-      if (titleLower.includes('laptop') || titleLower.includes('computadora')) {
-        return 'MLM1649'; // Computación
-      }
-      if (titleLower.includes('audifonos') || titleLower.includes('auriculares')) {
-        return 'MLM1435'; // Audífonos
-      }
-      if (titleLower.includes('tablet')) {
-        return 'MLM1499'; // Tablets
-      }
-      
-      // Categoría genérica de electrónica como último recurso
-      return 'MLM1000'; // Electrónica, Audio y Video
-    }
+    return this.getValidLeafCategory(title, siteId, accessToken);
   }
 
-  // 7. Actualizar precio en ML
   async updatePrice(mlItemId: string, newPrice: number) {
     try {
       const accessToken = await this.getValidAccessToken();
@@ -305,7 +456,6 @@ class MercadoLibreService {
     }
   }
 
-  // 8. Actualizar stock en ML
   async updateStock(mlItemId: string, quantity: number) {
     try {
       const accessToken = await this.getValidAccessToken();
@@ -329,7 +479,6 @@ class MercadoLibreService {
     }
   }
 
-  // 9. Pausar/Activar publicación
   async updateStatus(mlItemId: string, status: 'active' | 'paused') {
     try {
       const accessToken = await this.getValidAccessToken();
@@ -358,7 +507,6 @@ class MercadoLibreService {
     }
   }
 
-  // 10. Eliminar producto
   async deleteProduct(mlItemId: string) {
     try {
       const accessToken = await this.getValidAccessToken();
@@ -387,7 +535,6 @@ class MercadoLibreService {
     }
   }
 
-  // 11. Obtener información del usuario ML
   async getUserInfo(): Promise<any> {
     try {
       const accessToken = await this.getValidAccessToken();
