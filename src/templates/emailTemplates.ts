@@ -707,7 +707,7 @@ export const newReviewNotificationTemplate = (data: {
                     
                     <!-- CTA -->
                     <div style="text-align: center; margin: 30px 0;">
-                        <a href="${process.env.FRONTEND_URL}/admin/settings/reviews" class="button">
+                        <a href="${process.env.FRONTEND_URL}/admin/settings" class="button">
                             👁️ Ver y Aprobar Reseña
                         </a>
                     </div>

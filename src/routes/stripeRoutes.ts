@@ -149,83 +149,86 @@ const sendCustomerOrderNotification = async (params: {
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
       </head>
-      <body style="font-family: 'Inter', -apple-system, sans-serif; margin: 0; padding: 0; background: #1F1F1F;">
+      <body style="font-family: 'Inter', -apple-system, sans-serif; margin: 0; padding: 0; background: #f3f4f6;">
           <div style="padding: 20px;">
-              <div style="max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1F1F1F 0%, #2A2A2A 100%); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+              <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
                   
-                  <!-- Header -->
-                  <div style="background: linear-gradient(135deg, #FFD700 0%, #00CED1 100%); padding: 40px 30px; text-align: center; position: relative;">
-                      <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml,<svg width=\"100\" height=\"100\" xmlns=\"http://www.w3.org/2000/svg\"><defs><pattern id=\"grid\" width=\"20\" height=\"20\" patternUnits=\"userSpaceOnUse\"><path d=\"M 20 0 L 0 0 0 20\" fill=\"none\" stroke=\"rgba(255,255,255,0.1)\" stroke-width=\"1\"/></pattern></defs><rect width=\"100\" height=\"100\" fill=\"url(%23grid)\"/></svg>'); opacity: 0.3;"></div>
-                      <div style="position: relative; z-index: 1;">
-                          <div style="font-size: 64px; margin-bottom: 10px;">✅</div>
-                          <h1 style="color: #1F1F1F; margin: 0; font-size: 32px; font-weight: 900; text-shadow: 2px 2px 4px rgba(0,0,0,0.2);">
-                              ¡Pedido Confirmado!
-                          </h1>
-                          <p style="color: #1F1F1F; margin: 10px 0 0 0; font-size: 14px; opacity: 0.9;">
-                              Tu compra fue procesada exitosamente
-                          </p>
-                      </div>
+                  <!-- Header con degradado -->
+                  <div style="background: linear-gradient(135deg, #FFD700 0%, #00CED1 100%); padding: 40px 30px; text-align: center;">
+                      <div style="font-size: 64px; margin-bottom: 10px;">✅</div>
+                      <h1 style="color: #1F1F1F; margin: 0; font-size: 32px; font-weight: 900;">
+                          ¡Pedido Confirmado!
+                      </h1>
+                      <p style="color: #1F1F1F; margin: 10px 0 0 0; font-size: 16px; opacity: 0.8;">
+                          Tu compra fue procesada exitosamente
+                      </p>
                   </div>
                   
                   <!-- Content -->
-                  <div style="padding: 40px 30px;">
-                      <p style="color: #FFFFFF; font-size: 18px; margin: 0 0 10px 0;">
-                          Hola <strong style="color: #FFD700;">${params.customerName}</strong>,
+                  <div style="padding: 40px 30px; background: #ffffff;">
+                      <p style="color: #1F1F1F; font-size: 18px; margin: 0 0 10px 0;">
+                          Hola <strong style="color: #D97706;">${params.customerName}</strong>,
                       </p>
                       
-                      <p style="color: #9CA3AF; font-size: 16px;">
-                          ¡Gracias por tu compra! Tu pedido <strong style="color: #00CED1;">#${params.orderNumber}</strong> ha sido confirmado y pagado.
+                      <p style="color: #4B5563; font-size: 16px; line-height: 1.6;">
+                          ¡Gracias por tu compra! Tu pedido <strong style="color: #0891B2;">#${params.orderNumber}</strong> ha sido confirmado y pagado.
                       </p>
                       
                       <!-- Order Summary Card -->
-                      <div style="background: #2A2A2A; border: 1px solid rgba(255,215,0,0.2); border-radius: 8px; padding: 25px; margin: 25px 0;">
-                          <h3 style="color: #FFD700; margin: 0 0 20px 0; font-size: 18px; border-bottom: 2px solid rgba(255,215,0,0.2); padding-bottom: 10px;">
+                      <div style="background: #F9FAFB; border: 2px solid #E5E7EB; border-radius: 10px; padding: 25px; margin: 25px 0;">
+                          <h3 style="color: #D97706; margin: 0 0 20px 0; font-size: 18px; border-bottom: 2px solid #FDE68A; padding-bottom: 10px;">
                               📦 Resumen del Pedido
                           </h3>
                           
                           ${params.items.map(item => `
-                              <div style="display: table; width: 100%; padding: 12px 0; border-bottom: 1px solid rgba(255,215,0,0.1);">
-                                  <div style="display: table-cell; vertical-align: top;">
-                                      <p style="margin: 0; color: #FFFFFF; font-size: 15px;">
-                                          ${item.productName}
-                                      </p>
-                                      <p style="margin: 5px 0 0 0; color: #9CA3AF; font-size: 13px;">
-                                          Cantidad: ${item.quantity}
-                                      </p>
-                                  </div>
-                                  <div style="display: table-cell; vertical-align: top; text-align: right;">
-                                      <p style="margin: 0; color: #00CED1; font-size: 16px; font-weight: bold;">
-                                          $${(item.price * item.quantity).toFixed(2)}
-                                      </p>
-                                  </div>
+                              <div style="padding: 15px 0; border-bottom: 1px solid #E5E7EB;">
+                                  <table width="100%" cellpadding="0" cellspacing="0">
+                                      <tr>
+                                          <td style="vertical-align: top; width: 70%;">
+                                              <p style="margin: 0; color: #1F2937; font-size: 15px; font-weight: 600;">
+                                                  ${item.productName}
+                                              </p>
+                                              <p style="margin: 5px 0 0 0; color: #6B7280; font-size: 13px;">
+                                                  Cantidad: ${item.quantity}
+                                              </p>
+                                          </td>
+                                          <td style="vertical-align: top; text-align: right; width: 30%;">
+                                              <p style="margin: 0; color: #0891B2; font-size: 16px; font-weight: bold;">
+                                                  $${(item.price * item.quantity).toFixed(2)}
+                                              </p>
+                                          </td>
+                                      </tr>
+                                  </table>
                               </div>
                           `).join('')}
                           
-                          <div style="display: table; width: 100%; padding: 20px 0 0 0; margin-top: 15px; border-top: 2px solid #FFD700;">
-                              <div style="display: table-cell; vertical-align: middle;">
-                                  <p style="margin: 0; color: #FFFFFF; font-size: 20px; font-weight: bold;">Total Pagado:</p>
-                              </div>
-                              <div style="display: table-cell; vertical-align: middle; text-align: right;">
-                                  <p style="margin: 0; background: linear-gradient(135deg, #FFD700 0%, #00CED1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-size: 24px; font-weight: bold;">
-                                      $${params.total.toFixed(2)} MXN
-                                  </p>
-                              </div>
-                          </div>
+                          <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 20px; padding-top: 20px; border-top: 3px solid #D97706;">
+                              <tr>
+                                  <td style="vertical-align: middle;">
+                                      <p style="margin: 0; color: #1F2937; font-size: 20px; font-weight: bold;">Total Pagado:</p>
+                                  </td>
+                                  <td style="vertical-align: middle; text-align: right;">
+                                      <p style="margin: 0; color: #D97706; font-size: 26px; font-weight: bold;">
+                                          $${params.total.toFixed(2)} MXN
+                                      </p>
+                                  </td>
+                              </tr>
+                          </table>
                       </div>
                       
                       <!-- Payment Confirmation -->
-                      <div style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; padding: 15px; margin: 20px 0;">
-                          <p style="margin: 0; color: #3B82F6; font-size: 14px; text-align: center;">
+                      <div style="background: #DBEAFE; border-left: 4px solid #3B82F6; border-radius: 6px; padding: 15px; margin: 20px 0;">
+                          <p style="margin: 0; color: #1E40AF; font-size: 14px;">
                               ✅ <strong>Pago confirmado</strong> - Tu pago fue procesado exitosamente con ${params.paymentMethod}
                           </p>
                       </div>
                       
                       <!-- Next Steps -->
-                      <div style="background: #2A2A2A; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                          <h3 style="color: #00CED1; margin: 0 0 15px 0; font-size: 16px;">
+                      <div style="background: #F0FDF4; border: 2px solid #BBF7D0; border-radius: 8px; padding: 20px; margin: 25px 0;">
+                          <h3 style="color: #15803D; margin: 0 0 15px 0; font-size: 16px;">
                               🚀 Próximos pasos:
                           </h3>
-                          <ul style="margin: 0; padding-left: 20px; color: #9CA3AF; font-size: 14px; line-height: 1.8;">
+                          <ul style="margin: 0; padding-left: 20px; color: #4B5563; font-size: 14px; line-height: 1.8;">
                               <li>Estamos preparando tu pedido con cuidado</li>
                               <li>Recibirás un email cuando sea enviado</li>
                               <li>Podrás rastrear tu envío en tiempo real</li>
@@ -236,40 +239,42 @@ const sendCustomerOrderNotification = async (params: {
                       <!-- Track Order Button -->
                       <div style="text-align: center; margin: 30px 0;">
                           <a href="${process.env.FRONTEND_URL}/account/orders" 
-                             style="display: inline-block; background: linear-gradient(135deg, #FFD700 0%, #00CED1 100%); color: #1F1F1F; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(255,215,0,0.4);">
+                             style="display: inline-block; background: linear-gradient(135deg, #FFD700 0%, #00CED1 100%); color: #1F1F1F; padding: 16px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
                               🔍 Rastrear mi Pedido
                           </a>
                       </div>
                       
-                      <!-- Review Section - NUEVO -->
-                      <div style="background: linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(0,206,209,0.1) 100%); border: 2px solid rgba(255,215,0,0.3); border-radius: 12px; padding: 25px; margin: 30px 0;">
+                      <!-- Review Section -->
+                      <div style="background: #FEF3C7; border: 2px solid #FDE047; border-radius: 12px; padding: 25px; margin: 30px 0;">
                           <div style="text-align: center; margin-bottom: 20px;">
                               <div style="font-size: 48px; margin-bottom: 10px;">⭐</div>
-                              <h3 style="color: #FFD700; margin: 0 0 10px 0; font-size: 20px; font-weight: bold;">
+                              <h3 style="color: #92400E; margin: 0 0 10px 0; font-size: 22px; font-weight: bold;">
                                   ¿Qué te pareció tu compra?
                               </h3>
-                              <p style="color: #9CA3AF; font-size: 14px; margin: 0;">
-                                  Tu opinión nos ayuda a mejorar y ayuda a otros clientes a decidir
+                              <p style="color: #78350F; font-size: 14px; margin: 0; line-height: 1.5;">
+                                  Tu opinión nos ayuda a mejorar y ayuda a otros clientes
                               </p>
                           </div>
                           
-                          <div style="background: #2A2A2A; border-radius: 8px; padding: 20px; margin-top: 20px;">
-                              <p style="color: #00CED1; font-size: 14px; margin: 0 0 15px 0; text-align: center;">
-                                  💬 <strong>Califica los productos que compraste:</strong>
+                          <div style="background: #ffffff; border: 1px solid #FDE047; border-radius: 8px; padding: 20px; margin-top: 20px;">
+                              <p style="color: #0891B2; font-size: 15px; font-weight: bold; margin: 0 0 15px 0; text-align: center;">
+                                  💬 Califica los productos que compraste:
                               </p>
                               
                               ${params.items.slice(0, 3).map(item => `
-                                  <div style="margin: 10px 0;">
+                                  <div style="margin: 12px 0;">
                                       <a href="${process.env.FRONTEND_URL}/products/${item.productSlug || ''}#reviews" 
-                                         style="display: block; background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.2); border-radius: 6px; padding: 12px 15px; text-decoration: none; transition: all 0.2s;">
-                                          <div style="display: table; width: 100%;">
-                                              <div style="display: table-cell; vertical-align: middle;">
-                                                  <span style="color: #FFFFFF; font-size: 14px;">⭐ ${item.productName}</span>
-                                              </div>
-                                              <div style="display: table-cell; vertical-align: middle; text-align: right;">
-                                                  <span style="color: #FFD700; font-size: 12px; font-weight: bold;">Calificar →</span>
-                                              </div>
-                                          </div>
+                                         style="display: block; background: #FFFBEB; border: 2px solid #FDE68A; border-radius: 8px; padding: 15px; text-decoration: none;">
+                                          <table width="100%" cellpadding="0" cellspacing="0">
+                                              <tr>
+                                                  <td style="vertical-align: middle; width: 75%;">
+                                                      <span style="color: #1F2937; font-size: 14px; font-weight: 600;">⭐ ${item.productName}</span>
+                                                  </td>
+                                                  <td style="vertical-align: middle; text-align: right; width: 25%;">
+                                                      <span style="color: #D97706; font-size: 13px; font-weight: bold;">Calificar →</span>
+                                                  </td>
+                                              </tr>
+                                          </table>
                                       </a>
                                   </div>
                               `).join('')}
@@ -282,33 +287,33 @@ const sendCustomerOrderNotification = async (params: {
                           </div>
                           
                           <div style="text-align: center; margin-top: 20px;">
-                              <p style="color: #9CA3AF; font-size: 12px; margin: 0;">
-                                  🎁 <strong style="color: #FFD700;">¡Gana puntos!</strong> Cada reseña te da descuentos para futuras compras
+                              <p style="color: #78350F; font-size: 13px; margin: 0;">
+                                  🎁 <strong>¡Gana descuentos!</strong> Cada reseña te da puntos para futuras compras
                               </p>
                           </div>
                       </div>
                       
                       <!-- Support -->
-                      <div style="background: rgba(0,206,209,0.1); border: 1px solid rgba(0,206,209,0.3); border-radius: 8px; padding: 15px; text-align: center; margin-top: 20px;">
-                          <p style="margin: 0; color: #00CED1; font-size: 14px;">
+                      <div style="background: #E0F2FE; border-left: 4px solid #0891B2; border-radius: 6px; padding: 15px; text-align: center; margin-top: 25px;">
+                          <p style="margin: 0; color: #075985; font-size: 14px; line-height: 1.5;">
                               💬 <strong>¿Necesitas ayuda?</strong> Nuestro equipo está disponible 24/7<br>
-                              <a href="mailto:soporte@beztshop.com" style="color: #FFD700; text-decoration: none; font-weight: bold;">soporte@beztshop.com</a>
+                              <a href="mailto:atencionalcliente@beztshop.com" style="color: #D97706; text-decoration: none; font-weight: bold;">soporte@beztshop.com</a>
                           </p>
                       </div>
                   </div>
                   
                   <!-- Footer -->
-                  <div style="background: #2A2A2A; padding: 30px; text-align: center; border-top: 1px solid rgba(255,215,0,0.1);">
-                      <p style="color: #9CA3AF; font-size: 14px; margin: 0 0 15px 0;">
-                          Gracias por confiar en <strong style="color: #FFD700;">BeztShop</strong>
+                  <div style="background: #F9FAFB; padding: 30px; text-align: center; border-top: 2px solid #E5E7EB;">
+                      <p style="color: #4B5563; font-size: 14px; margin: 0 0 15px 0;">
+                          Gracias por confiar en <strong style="color: #D97706;">BeztShop</strong>
                       </p>
                       
                       <div style="margin: 20px 0;">
-                          <a href="${process.env.FRONTEND_URL}" style="color: #00CED1; text-decoration: none; margin: 0 10px; font-size: 14px;">Inicio</a>
-                          <span style="color: #6B7280;">•</span>
-                          <a href="${process.env.FRONTEND_URL}/products" style="color: #00CED1; text-decoration: none; margin: 0 10px; font-size: 14px;">Productos</a>
-                          <span style="color: #6B7280;">•</span>
-                          <a href="${process.env.FRONTEND_URL}/account" style="color: #00CED1; text-decoration: none; margin: 0 10px; font-size: 14px;">Mi Cuenta</a>
+                          <a href="${process.env.FRONTEND_URL}" style="color: #0891B2; text-decoration: none; margin: 0 10px; font-size: 14px;">Inicio</a>
+                          <span style="color: #9CA3AF;">•</span>
+                          <a href="${process.env.FRONTEND_URL}/products" style="color: #0891B2; text-decoration: none; margin: 0 10px; font-size: 14px;">Productos</a>
+                          <span style="color: #9CA3AF;">•</span>
+                          <a href="${process.env.FRONTEND_URL}/account" style="color: #0891B2; text-decoration: none; margin: 0 10px; font-size: 14px;">Mi Cuenta</a>
                       </div>
                       
                       <p style="color: #6B7280; font-size: 12px; margin: 20px 0 0 0;">
