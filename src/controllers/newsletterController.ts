@@ -76,7 +76,7 @@ export const subscribe = async (req: Request, res: Response) => {
         subject: '¡Bienvenido a BeztShop Newsletter!',
         html: newsletterTemplate.welcome({
           name: existingUser.firstName || 'Suscriptor',
-          discountCode: 'BIENVENIDA15'
+          discountCode: 'BIENVENIDA5'
         })
       });
 
@@ -136,7 +136,7 @@ export const subscribe = async (req: Request, res: Response) => {
       subject: '¡Bienvenido a BeztShop Newsletter!',
       html: newsletterTemplate.welcome({
         name: name || 'Suscriptor',
-        discountCode: 'BIENVENIDA15'
+        discountCode: 'BIENVENIDA5'
       })
     });
 

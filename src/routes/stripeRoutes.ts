@@ -28,7 +28,7 @@ const sendAdminOrderNotification = async (orderData: {
   itemsCount: number;
 }) => {
   try {
-    const adminEmail = 'atencionalcliente@gmail.com';
+    const adminEmail = 'atencionalcliente@beztshop.com';
     
     const html = `
       <!DOCTYPE html>
@@ -558,11 +558,45 @@ if (subtotal >= freeShippingThreshold) {
         });
       }
 
+      // ✅ Registrar uso del cupón si aplica
       if (appliedCoupon) {
-        await tx.coupon.update({
-          where: { id: appliedCoupon.id },
-          data: { usageCount: { increment: 1 } }
-        });
+        console.log(`💾 REGISTRANDO uso del cupón ${appliedCoupon.code}`);
+        console.log(`   - Cupón ID: ${appliedCoupon.id}`);
+        console.log(`   - Usuario ID: ${user.id}`);
+        console.log(`   - Orden ID: ${newOrder.id}`);
+        console.log(`   - Descuento: ${discount}`);
+
+        try {
+          // Crear registro de uso
+          const couponUsage = await tx.couponUsage.create({
+            data: {
+              couponId: appliedCoupon.id,
+              userId: user.id,
+              orderId: newOrder.id,
+              discountAmount: discount,
+              orderTotal: total,
+              productsApplied: JSON.stringify(orderItems.map(i => i.productId))
+            }
+          });
+
+          console.log(`✅ Uso de cupón registrado exitosamente:`, couponUsage.id);
+
+          // Incrementar contador
+          const updatedCoupon = await tx.coupon.update({
+            where: { id: appliedCoupon.id },
+            data: {
+              usageCount: { increment: 1 }
+            }
+          });
+
+          console.log(`✅ Contador de cupón actualizado:`, updatedCoupon.usageCount);
+
+        } catch (couponError) {
+          console.error(`❌ ERROR al registrar uso de cupón:`, couponError);
+          throw couponError;
+        }
+      } else {
+        console.log('ℹ️ No hay cupón aplicado, saltando registro');
       }
 
       return newOrder;

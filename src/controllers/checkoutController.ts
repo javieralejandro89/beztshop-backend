@@ -168,6 +168,7 @@ export const validateCoupon = async (req: AuthenticatedRequest, res: Response) =
     }
 
     const { code, subtotal } = validation.data;
+    const userId = req.user?.id;
 
     const coupon = await prisma.coupon.findFirst({
       where: {
@@ -196,7 +197,24 @@ export const validateCoupon = async (req: AuthenticatedRequest, res: Response) =
       });
     }
 
-    // Verificar límite de uso
+    // ✅ NUEVO: Verificar si el usuario ya usó este cupón
+    if (req.user?.id) {
+      const userUsage = await prisma.couponUsage.findFirst({
+        where: {
+          couponId: coupon.id,
+          userId: req.user.id
+        }
+      });
+
+      if (userUsage) {
+        return res.status(400).json({
+          error: 'Ya has usado este cupón anteriormente'
+        });
+      }
+    }
+
+
+    // Verificar límite de uso global
     if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
       return res.status(400).json({
         error: 'Este cupón ha alcanzado su límite de uso'
@@ -248,13 +266,13 @@ export const validateCoupon = async (req: AuthenticatedRequest, res: Response) =
 // Función auxiliar para calcular totales (no exportada, solo interna)
 const calculateOrderTotalsInternal = async (
   items: any[],   
-  couponCode?: string
+  couponCode?: string,
+  userId?: string // 🆕 AGREGAR userId
 ): Promise<OrderTotalsData> => {
   if (!items || !Array.isArray(items) || items.length === 0) {
     throw new Error('El carrito está vacío');
   }
 
-  // Obtener productos y calcular subtotal
   const productIds = items.map((item: any) => item.productId);
   const products = await prisma.product.findMany({
     where: {
@@ -272,83 +290,75 @@ const calculateOrderTotalsInternal = async (
       throw new Error(`Producto ${item.productId} no encontrado`);
     }
 
-    // Verificar stock - NO lanzar error, solo registrar el problema
-if (product.trackInventory && product.stockCount < item.quantity) {
-  console.warn(`Stock insuficiente para ${product.name}. Solicitado: ${item.quantity}, Disponible: ${product.stockCount}`);
-  // Usar stock disponible sin agregar propiedades extra
-  const adjustedQuantity = Math.max(0, product.stockCount);
-  const itemTotal = Number(product.price) * adjustedQuantity;
-  
-  orderItems.push({
-    productId: product.id,
-    productName: product.name,
-    quantity: adjustedQuantity, // Cantidad ajustada
-    price: Number(product.price),
-    totalPrice: itemTotal,
-    variants: item.variants || null
-  });
-  
-  subtotal += itemTotal;
-  continue;
-}
+    if (product.trackInventory && product.stockCount < item.quantity) {
+      console.warn(`Stock insuficiente para ${product.name}. Solicitado: ${item.quantity}, Disponible: ${product.stockCount}`);
+      const adjustedQuantity = Math.max(0, product.stockCount);
+      const itemTotal = Number(product.price) * adjustedQuantity;
+      
+      orderItems.push({
+        productId: product.id,
+        productName: product.name,
+        quantity: adjustedQuantity,
+        price: Number(product.price),
+        totalPrice: itemTotal,
+        variants: item.variants || null
+      });
+      
+      subtotal += itemTotal;
+      continue;
+    }
 
     const itemTotal = Number(product.price) * item.quantity;
     subtotal += itemTotal;
 
     orderItems.push({
-  productId: product.id,
-  productName: product.name,
-  quantity: item.quantity,
-  price: Number(product.price),
-  totalPrice: itemTotal,
-  variants: item.variants || null
-});
+      productId: product.id,
+      productName: product.name,
+      quantity: item.quantity,
+      price: Number(product.price),
+      totalPrice: itemTotal,
+      variants: item.variants || null
+    });
   }
 
-  // Calcular envío
-  const freeShippingThreshold = 299; // MXN - Alineado con Mercado Libre
-
-// Calcular peso total del pedido
-let totalWeight = 0;
-for (const item of items) {
-  const product = products.find(p => p.id === item.productId);
-  if (product && product.weight) {
-    totalWeight += Number(product.weight) * item.quantity;
+  const freeShippingThreshold = 299;
+  let totalWeight = 0;
+  for (const item of items) {
+    const product = products.find(p => p.id === item.productId);
+    if (product && product.weight) {
+      totalWeight += Number(product.weight) * item.quantity;
+    }
   }
-}
 
-// Estimar peso si no está definido
-if (totalWeight === 0) {
-  totalWeight = items.reduce((sum, item) => sum + item.quantity, 0) * 0.5; // 0.5kg por item
-}
+  if (totalWeight === 0) {
+    totalWeight = items.reduce((sum, item) => sum + item.quantity, 0) * 0.5;
+  }
 
-// Calcular costo de envío por rangos de peso (tarifas realistas México)
-let shippingCost = 0;
-if (subtotal >= freeShippingThreshold) {
-  shippingCost = 0; // Envío gratis
-} else {
-  if (totalWeight <= 1) {
-    shippingCost = 70; // ~$70 para hasta 1kg
-  } else if (totalWeight <= 3) {
-    shippingCost = 80; // ~$95 para 1-3kg
-  } else if (totalWeight <= 5) {
-    shippingCost = 90; // ~$120 para 3-5kg
-  } else if (totalWeight <= 10) {
-    shippingCost = 95; // ~$150 para 5-10kg
+  let shippingCost = 0;
+  if (subtotal >= freeShippingThreshold) {
+    shippingCost = 0;
   } else {
-    // Para más de 10kg, cobrar por kg adicional
-    shippingCost = 150 + ((totalWeight - 10) * 15); // $15 por kg extra
+    if (totalWeight <= 1) {
+      shippingCost = 70;
+    } else if (totalWeight <= 3) {
+      shippingCost = 80;
+    } else if (totalWeight <= 5) {
+      shippingCost = 90;
+    } else if (totalWeight <= 10) {
+      shippingCost = 95;
+    } else {
+      shippingCost = 150 + ((totalWeight - 10) * 15);
+    }
+    
+    shippingCost = Math.min(shippingCost, 250);
   }
-  
-  // Tope máximo realista
-  shippingCost = Math.min(shippingCost, 250); // Máximo $250 MXN
-}
 
-  // Validar y aplicar cupón si existe
+  // 🆕 VALIDAR Y APLICAR CUPÓN CON LÓGICA AVANZADA
   let discount = 0;
   let appliedCoupon = null;
+  let couponApplicableProducts: string[] = [];
 
-  if (couponCode) {
+  if (couponCode && userId) {
     const coupon = await prisma.coupon.findFirst({
       where: {
         code: couponCode.toUpperCase(),
@@ -359,41 +369,96 @@ if (subtotal >= freeShippingThreshold) {
               { expiresAt: null },
               { expiresAt: { gte: new Date() } }
             ]
+          },
+          {
+            OR: [
+              { startsAt: null },
+              { startsAt: { lte: new Date() } }
+            ]
           }
         ]
+      },
+      include: {
+        usages: {
+          where: { userId },
+          select: { id: true }
+        }
       }
     });
 
-    if (coupon && (!coupon.minAmount || subtotal >= Number(coupon.minAmount))) {
-      switch (coupon.type) {
-        case 'PERCENTAGE':
-          discount = (subtotal * Number(coupon.value)) / 100;
-          if (coupon.maxDiscount) {
-            discount = Math.min(discount, Number(coupon.maxDiscount));
-          }
-          break;
-        case 'FIXED_AMOUNT':
-          discount = Number(coupon.value);
-          break;
-        case 'FREE_SHIPPING':
-          shippingCost = 0;
-          break;
-      }
+    if (coupon) {
+      // ✅ Verificar límite de uso por usuario
+      if (coupon.usageLimitPerUser) {
+        if (coupon.usages.length >= coupon.usageLimitPerUser) {
+          console.warn(`Usuario ${userId} ya alcanzó límite de uso del cupón ${coupon.code}`);
+        } else {
+          if (!coupon.minAmount || subtotal >= Number(coupon.minAmount)) {
+            
+            // 🆕 DETERMINAR PRODUCTOS APLICABLES
+            if (coupon.applicationType === 'ALL_PRODUCTS') {
+              couponApplicableProducts = productIds;
+            } else if (coupon.applicationType === 'SPECIFIC_PRODUCTS') {
+              const applicableIds = coupon.applicableProductIds?.split(',').filter(Boolean) || [];
+              couponApplicableProducts = productIds.filter(id => applicableIds.includes(id));
+            } else if (coupon.applicationType === 'SPECIFIC_CATEGORIES') {
+              const categoryIds = coupon.applicableCategoryIds?.split(',').filter(Boolean) || [];
+              const applicableProds = await prisma.product.findMany({
+                where: {
+                  id: { in: productIds },
+                  categoryId: { in: categoryIds }
+                },
+                select: { id: true }
+              });
+              couponApplicableProducts = applicableProds.map(p => p.id);
+            } else if (coupon.applicationType === 'EXCLUDE_PRODUCTS') {
+              const excludedIds = coupon.excludedProductIds?.split(',').filter(Boolean) || [];
+              couponApplicableProducts = productIds.filter(id => !excludedIds.includes(id));
+            }
 
-      appliedCoupon = {
-        id: coupon.id,
-        code: coupon.code,
-        type: coupon.type,
-        discount
-      };
+            if (couponApplicableProducts.length > 0) {
+              // 🆕 CALCULAR DESCUENTO SOLO EN PRODUCTOS APLICABLES
+              let applicableSubtotal = 0;
+              
+              for (const item of orderItems) {
+                if (couponApplicableProducts.includes(item.productId)) {
+                  applicableSubtotal += item.totalPrice;
+                }
+              }
+
+              switch (coupon.type) {
+                case 'PERCENTAGE':
+                  discount = (applicableSubtotal * Number(coupon.value)) / 100;
+                  if (coupon.maxDiscount) {
+                    discount = Math.min(discount, Number(coupon.maxDiscount));
+                  }
+                  break;
+                  
+                case 'FIXED_AMOUNT':
+                  discount = Math.min(Number(coupon.value), applicableSubtotal);
+                  break;
+                  
+                case 'FREE_SHIPPING':
+                  shippingCost = 0;
+                  break;
+              }
+
+              appliedCoupon = {
+                id: coupon.id,
+                code: coupon.code,
+                type: coupon.type,
+                discount,
+                description: coupon.description,
+                applicableProducts: couponApplicableProducts
+              };
+            }
+          }
+        }
+      }
     }
   }
 
-  // Calcular impuesto (después del descuento)
   const taxableAmount = Math.max(0, subtotal - discount);
-  const tax = 0; // 0% de impuesto
-
-  // Total final
+  const tax = 0;
   const total = subtotal - discount + shippingCost;
 
   return {
@@ -411,7 +476,8 @@ if (subtotal >= freeShippingThreshold) {
 export const calculateOrderTotals = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { items, couponCode } = req.body;
-    const totals = await calculateOrderTotalsInternal(items, couponCode);
+    const userId = req.user?.id; // 🆕 Obtener userId
+    const totals = await calculateOrderTotalsInternal(items, couponCode, userId); // 🆕 Pasar userId
     res.json(totals);
   } catch (error: any) {
     console.error('Error calculating order totals:', error);
@@ -501,8 +567,65 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response) => {
       });
     } 
 
+    // 🆕 VALIDAR CUPÓN NUEVAMENTE AL CREAR ORDEN (evitar race conditions)
+if (couponCode && userId) {
+  const couponValidation = await prisma.coupon.findFirst({
+    where: {
+      code: couponCode.toUpperCase(),
+      isActive: true,
+      AND: [
+        {
+          OR: [
+            { expiresAt: null },
+            { expiresAt: { gte: new Date() } }
+          ]
+        }
+      ]
+    },
+    include: {
+      usages: {
+        where: { userId },
+        select: { id: true }
+      }
+    }
+  });
+
+  if (!couponValidation) {
+    return res.status(400).json({
+      error: 'El cupón ya no es válido'
+    });
+  }
+
+  // ✅ VALIDAR LÍMITE DE USOS POR USUARIO
+  if (couponValidation.usageLimitPerUser) {
+    if (couponValidation.usages.length >= couponValidation.usageLimitPerUser) {
+      return res.status(400).json({
+        error: `Ya has usado este cupón el máximo de veces permitido (${couponValidation.usageLimitPerUser})`,
+        code: 'USER_USAGE_LIMIT_REACHED'
+      });
+    }
+  }
+}
+
     // Recalcular totales para seguridad
-    const totalsData = await calculateOrderTotalsInternal(items, couponCode);
+    const totalsData = await calculateOrderTotalsInternal(items, couponCode, userId);
+
+    // 🔍 DEBUG: Verificar datos del cupón
+console.log('=== TOTALES CALCULADOS ===');
+console.log('Subtotal:', totalsData.subtotal);
+console.log('Descuento:', totalsData.discount);
+console.log('Total:', totalsData.total);
+console.log('Cupón aplicado:', totalsData.appliedCoupon);
+console.log('Código de cupón recibido:', couponCode);
+
+if (totalsData.appliedCoupon) {
+  console.log('✅ HAY CUPÓN APLICADO:');
+  console.log('  - ID:', totalsData.appliedCoupon.id);
+  console.log('  - Código:', totalsData.appliedCoupon.code);
+  console.log('  - Descuento:', totalsData.discount);
+} else {
+  console.log('❌ NO HAY CUPÓN APLICADO');
+}
 
     // Generar número de pedido único
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
@@ -557,16 +680,50 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response) => {
         });
       }
 
-      // Incrementar uso del cupón si aplica
+      // 🆕 REGISTRAR USO DEL CUPÓN - MEJORADO
+      console.log('🔍 Verificando si hay cupón para registrar...');
+      console.log('appliedCoupon:', totalsData.appliedCoupon);
+      console.log('discount:', totalsData.discount);
+
       if (totalsData.appliedCoupon) {
-        await tx.coupon.update({
-          where: { id: totalsData.appliedCoupon.id },
-          data: {
-            usageCount: {
-              increment: 1
+        console.log(`💾 REGISTRANDO uso del cupón ${totalsData.appliedCoupon.code}`);
+        console.log(`   - Cupón ID: ${totalsData.appliedCoupon.id}`);
+        console.log(`   - Usuario ID: ${userId}`);
+        console.log(`   - Orden ID: ${newOrder.id}`);
+        console.log(`   - Descuento: ${totalsData.discount}`);
+
+        try {
+          // Crear registro de uso
+          const couponUsage = await tx.couponUsage.create({
+            data: {
+              couponId: totalsData.appliedCoupon.id,
+              userId: userId,
+              orderId: newOrder.id,
+              discountAmount: totalsData.discount,
+              orderTotal: totalsData.total,
+              productsApplied: JSON.stringify(totalsData.appliedCoupon.applicableProducts || [])
             }
-          }
-        });
+          });
+
+          console.log(`✅ Uso de cupón registrado exitosamente:`, couponUsage.id);
+
+          // Incrementar contador
+          const updatedCoupon = await tx.coupon.update({
+            where: { id: totalsData.appliedCoupon.id },
+            data: {
+              usageCount: { increment: 1 }
+            }
+          });
+
+          console.log(`✅ Contador de cupón actualizado:`, updatedCoupon.usageCount);
+
+        } catch (couponError) {
+          console.error(`❌ ERROR al registrar uso de cupón:`, couponError);
+          // Re-lanzar error para hacer rollback de toda la transacción
+          throw couponError;
+        }
+      } else {
+        console.log('ℹ️ No hay cupón aplicado, saltando registro');
       }
 
       return newOrder;

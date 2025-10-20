@@ -503,7 +503,7 @@ export const newsletterTemplate = {
                                   🎁 Regalo de Bienvenida
                               </h2>
                               <p style="color: #1F2937; margin: 0 0 20px 0; font-size: 16px; opacity: 0.8;">
-                                  ¡Usa este código y obtén <strong>15% OFF</strong> en tu primera compra!
+                                  ¡Usa este código y obtén <strong>5% OFF</strong> en tu primera compra!
                               </p>
                               <div style="background: #FFFFFF; padding: 20px; border-radius: 8px; margin: 0 auto; max-width: 300px; border: 3px dashed #1F2937;">
                                   <code style="font-size: 32px; font-weight: bold; color: #1F2937; letter-spacing: 3px; font-family: 'Courier New', monospace;">

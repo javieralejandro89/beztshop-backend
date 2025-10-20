@@ -32,6 +32,7 @@ model User {
   reviews   ProductReview[]
   addresses      UserAddress[]
   paymentMethods UserPaymentMethod[]
+  couponUsages CouponUsage[] // 🆕 Cupones que ha usado
   wishlistItems  WishlistItem[]
   newsletterCampaignsSent NewsletterCampaignSent[] @relation("UserNewsletterRecipient")
   newsletterCampaignsCreated NewsletterCampaign[] @relation("NewsletterCreator")
@@ -222,6 +223,7 @@ model Order {
   
   user            User?       @relation(fields: [userId], references: [id])
   items           OrderItem[]
+  couponUsages CouponUsage[] // 🆕 Cupones usados en esta orden
   
   @@map("orders")
   @@index([orderNumber])
@@ -255,21 +257,71 @@ model Coupon {
   code        String     @unique
   type        CouponType @default(PERCENTAGE)
   value       Decimal    @db.Decimal(10, 2)
+  
+  // Restricciones de uso
   minAmount   Decimal?   @db.Decimal(10, 2)
   maxDiscount Decimal?   @db.Decimal(10, 2)
-  usageLimit  Int?
+  usageLimit  Int?       // Límite TOTAL de usos del cupón
+  usageLimitPerUser Int? @default(1) // 🆕 Límite de usos POR USUARIO
   usageCount  Int        @default(0)
+  
+  // Aplicabilidad de productos
+  applicationType CouponApplicability @default(ALL_PRODUCTS) // 🆕
+  applicableProductIds String? @db.Text // 🆕 IDs separados por comas
+  applicableCategoryIds String? @db.Text // 🆕 IDs de categorías
+  excludedProductIds String? @db.Text // 🆕 Productos excluidos
+  
+  // Configuración
   isActive    Boolean    @default(true)
+  isPublic    Boolean    @default(true) // 🆕 Si es público o privado (email)
   startsAt    DateTime?
   expiresAt   DateTime?
+  
+  // Metadata
+  description String?    @db.VarChar(500) // 🆕 Descripción del cupón
+  tags        String?    // 🆕 Para categorizar (WELCOME, CAMPAIGN, VIP, etc)
+  createdBy   String?    // 🆕 Admin que lo creó
+  
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+  
+  // Relaciones
+  usages      CouponUsage[] // 🆕 Historial de uso por usuario
   
   @@map("coupons")
   @@index([code])
   @@index([isActive])
   @@index([expiresAt])
+  @@index([tags])
 }
+
+// 🆕 NUEVA TABLA: Tracking de uso de cupones por usuario
+model CouponUsage {
+  id         String   @id @default(cuid())
+  couponId   String
+  userId     String
+  orderId    String?  // Orden donde se usó
+  
+  // Detalles del uso
+  discountAmount Decimal @db.Decimal(10, 2) // Descuento aplicado
+  orderTotal     Decimal @db.Decimal(10, 2) // Total de la orden
+  productsApplied Json?  // 🆕 Productos donde se aplicó el descuento
+  
+  usedAt     DateTime @default(now())
+  
+  // Relaciones
+  coupon     Coupon   @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order      Order?   @relation(fields: [orderId], references: [id])
+  
+  @@map("coupon_usage")
+  @@unique([couponId, orderId]) // Un cupón solo se puede usar una vez por orden
+  @@index([couponId])
+  @@index([userId])
+  @@index([orderId])
+  @@index([usedAt])
+}
+
 
 model UserAddress {
   id        String   @id @default(cuid())
@@ -473,6 +525,13 @@ enum CouponType {
   PERCENTAGE
   FIXED_AMOUNT
   FREE_SHIPPING
+}
+// 🆕 ENUM para tipo de aplicación
+enum CouponApplicability {
+  ALL_PRODUCTS      // Se aplica a todos los productos
+  SPECIFIC_PRODUCTS // Solo a productos específicos
+  SPECIFIC_CATEGORIES // Solo a categorías específicas
+  EXCLUDE_PRODUCTS  // Todos excepto algunos productos
 }
 
 enum PaymentMethodType {
