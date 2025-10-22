@@ -276,7 +276,7 @@ export class PDFService {
         .fillColor('#16A34A') // Verde para PAGADO (mantener por claridad)
         .fontSize(9)
         .font('Helvetica-Bold')
-        .text('✓ PAGADO', 60, infoTop + 100);
+        .text('PAGADO', 60, infoTop + 100);
     }
 
     // Cliente - Lado derecho

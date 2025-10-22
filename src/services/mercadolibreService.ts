@@ -296,31 +296,15 @@ class MercadoLibreService {
       // ✅ PASO 3: Configurar envío correctamente
       let shippingConfig: any;
       
-      if (userShippingModes.includes('me2')) {
-        // Usuario tiene ME2 (Mercado Envíos Flex)
-        shippingConfig = {
-          mode: 'me2',
-          methods: [],
-          dimensions: null,
-          local_pick_up: true,
-          free_shipping: false,
-          logistic_type: 'xd_drop_off', // Drop off en puntos Mercado Libre
-        };
-      } else if (userShippingModes.includes('custom')) {
-        // Usuario gestiona envío por su cuenta
-        shippingConfig = {
-          mode: 'custom',
-          local_pick_up: true,
-          free_shipping: false,
-        };
-      } else {
-        // Default: not_specified
-        shippingConfig = {
-          mode: 'not_specified',
-          local_pick_up: true,
-          free_shipping: false,
-        };
-      }
+      // SIEMPRE usar me2 para nuevas cuentas (más simple)
+      shippingConfig = {
+        mode: 'me2',
+        methods: [],
+        dimensions: null,
+        local_pick_up: true,
+        free_shipping: false,
+        logistic_type: 'xd_drop_off',
+      };
 
       console.log(`📦 Configuración de envío:`, shippingConfig);
 
@@ -333,22 +317,13 @@ class MercadoLibreService {
         available_quantity: product.stockCount,
         buying_mode: 'buy_it_now',
         condition: 'new',
-        listing_type_id: 'free', // Publicación gratuita
+        listing_type_id: 'free', // ✅ Publicación gratuita (sin plan contratado)
         description: {
           plain_text: descriptionText,
         },
         pictures: images,
-        shipping: shippingConfig,
-        sale_terms: [
-          {
-            id: 'WARRANTY_TYPE',
-            value_name: 'Garantía del vendedor'
-          },
-          {
-            id: 'WARRANTY_TIME',
-            value_name: '30 días'
-          }
-        ]
+        shipping: shippingConfig
+        // No incluir sale_terms por ahora
       };
 
       // Agregar atributos si es posible
@@ -404,7 +379,8 @@ class MercadoLibreService {
         message: error.response?.data?.message || error.message,
         cause: error.response?.data?.cause,
         error: error.response?.data?.error,
-        status: error.response?.status
+        status: error.response?.status,
+        fullResponse: JSON.stringify(error.response?.data, null, 2) // ← NUEVO: ver respuesta completa
       });
 
       let errorMessage = 'Error al publicar en Mercado Libre';
