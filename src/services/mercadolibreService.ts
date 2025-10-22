@@ -197,7 +197,7 @@ class MercadoLibreService {
       return 'MLM1055'; // Celulares y Smartphones > Apple iPhone
     }
     if (titleLower.includes('samsung') && (titleLower.includes('galaxy') || titleLower.includes('s24'))) {
-      return 'MLM395543'; // Celulares y Smartphones > Samsung Galaxy
+      return 'MLM1055'; // Celulares y Smartphones > Samsung Galaxy
     }
     
     // Tablets
@@ -258,6 +258,15 @@ class MercadoLibreService {
         throw new Error('Producto no encontrado');
       }
 
+      // ✅ Validaciones previas
+      if (!product.images || (Array.isArray(product.images) && product.images.length === 0)) {
+        throw new Error(`El producto "${product.name}" debe tener al menos 1 imagen`);
+      }
+
+      if (!product.brand) {
+        console.warn(`⚠️ El producto "${product.name}" no tiene marca, se usará valor genérico`);
+      }
+
       console.log(`📤 Publicando producto: ${product.name}`);
 
       // ✅ PASO 1: Obtener categoría LEAF válida
@@ -293,17 +302,13 @@ class MercadoLibreService {
       }
       title = title.substring(0, 60);
 
-      // ✅ PASO 3: Configurar envío correctamente
-      let shippingConfig: any;
-      
-      // SIEMPRE usar me2 para nuevas cuentas (más simple)
-      shippingConfig = {
+      // ✅PASO:3 Configurar envío ME2 con adopción
+      const shippingConfig: any = {
         mode: 'me2',
         methods: [],
-        dimensions: null,
         local_pick_up: true,
         free_shipping: false,
-        logistic_type: 'xd_drop_off',
+        tags: ['self_service_in'], // ✅ Tag para indicar que el vendedor gestionará el envío
       };
 
       console.log(`📦 Configuración de envío:`, shippingConfig);
@@ -314,7 +319,7 @@ class MercadoLibreService {
         category_id: mlCategoryId,
         price: Number(product.price),
         currency_id: 'MXN',
-        available_quantity: product.stockCount,
+        available_quantity: 1,
         buying_mode: 'buy_it_now',
         condition: 'new',
         listing_type_id: 'free', // ✅ Publicación gratuita (sin plan contratado)
@@ -326,11 +331,77 @@ class MercadoLibreService {
         // No incluir sale_terms por ahora
       };
 
-      // Agregar atributos si es posible
+      // ✅ Extraer atributos de tags si existen (versión segura)
+const extractTagValue = (tagPrefix: string): string | null => {
+  if (!product?.tags || !Array.isArray(product.tags)) return null;
+
+  // Filtrar solo los valores string
+  const stringTags = product.tags.filter((t): t is string => typeof t === 'string');
+
+  const tag = stringTags.find((t) => t.startsWith(tagPrefix));
+
+  return tag ? tag.split(':')[1] ?? null : null;
+};
+
+      const mlColor = extractTagValue('ML_COLOR');
+      const mlCarrier = extractTagValue('ML_CARRIER');
+
+      // ✅ Agregar atributos obligatorios dinámicamente
+      const attributes: any[] = [];
+      
+      // BRAND (obligatorio en casi todas las categorías)
       if (product.brand) {
-        itemData.attributes = [
-          { id: 'BRAND', value_name: product.brand }
-        ];
+        attributes.push({ id: 'BRAND', value_name: product.brand });
+      }
+      
+      // MODEL (obligatorio en electrónicos)
+      if (product.model) {
+        attributes.push({ id: 'MODEL', value_name: product.model });
+      }
+      
+      // Para celulares (MLM1055): Agregar atributos requeridos
+      if (mlCategoryId === 'MLM1055') {
+        // COLOR (obligatorio) - usar el del tag si existe, sino genérico
+        attributes.push({ 
+          id: 'COLOR', 
+          value_name: mlColor || 'No especificado' 
+        });
+        
+        // IS_DUAL_SIM (obligatorio)
+        attributes.push({ id: 'IS_DUAL_SIM', value_name: 'No' });
+        
+        // CARRIER (compañía telefónica) - usar el del tag si existe
+        attributes.push({ 
+          id: 'CARRIER', 
+          value_name: mlCarrier || 'Desbloqueado' 
+        });
+        
+        // Si no hay MODEL, agregar genérico
+        if (!product.model) {
+          attributes.push({ id: 'MODEL', value_name: 'No especificado' });
+        }
+        
+        // Si no hay BRAND, agregar genérico
+        if (!product.brand) {
+          attributes.push({ id: 'BRAND', value_name: 'Sin marca' });
+        }
+      }
+      
+      // Para laptops (MLM1652): Agregar atributos básicos
+      if (mlCategoryId === 'MLM1652') {
+        if (!product.model) {
+          attributes.push({ id: 'MODEL', value_name: 'No especificado' });
+        }
+        if (!product.brand) {
+          attributes.push({ id: 'BRAND', value_name: 'Genérica' });
+        }
+      }
+      
+      console.log(`📋 Atributos generados (${attributes.length}):`, attributes);
+      
+      // Asignar atributos si hay alguno
+      if (attributes.length > 0) {
+        itemData.attributes = attributes;
       }
 
       console.log(`📦 Datos finales a publicar:`, {

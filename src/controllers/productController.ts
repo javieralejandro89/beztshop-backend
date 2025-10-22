@@ -344,6 +344,7 @@ export const getProducts = async (req: Request, res: Response) => {
       images: product.images,
       brand: product.brand,
       model: product.model,
+      sku: product.sku,
       inStock: product.inStock,
       stockCount: product.stockCount,
       isFeatured: product.isFeatured,
@@ -439,6 +440,7 @@ export const getProductBySlug = async (req: Request, res: Response) => {
       images: product.images,
       brand: product.brand,
       model: product.model,
+      sku: product.sku,
       inStock: product.inStock,
       stockCount: product.trackInventory ? product.stockCount : null,
       rating: product.rating ? Number(product.rating) : null,  // ✅ AGREGAR
@@ -485,6 +487,9 @@ export const getFeaturedProducts = async (req: Request, res: Response) => {
       price: Number(product.price),
       comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
       images: product.images,
+      brand: product.brand, // ✅ AGREGAR
+      model: product.model, // ✅ AGREGAR
+      sku: product.sku, // ✅ AGREGAR
       rating: product.rating ? Number(product.rating) : null,
       reviewCount: product.reviewCount,
       category: product.category
@@ -615,6 +620,8 @@ export const getProductsAdmin = async (req: AuthenticatedRequest, res: Response)
       isActive: product.isActive,
       isFeatured: product.isFeatured,
       brand: product.brand,
+      model: product.model, // ✅ AGREGAR
+      sku: product.sku, 
       category: product.category,
       createdAt: product.createdAt
     }));
