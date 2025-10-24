@@ -20,7 +20,8 @@ import {
   updateOrderStatus,
   sendCustomNotification,
   generateInvoice,
-  getOrderStats
+  getOrderStats,
+  deleteOrder
 } from '../controllers/adminOrdersController';
 
 import {
@@ -101,6 +102,9 @@ router.post('/orders/:id/notify', sendCustomNotification);
 
 // GET /api/admin/orders/:id/invoice - Generar y descargar factura
 router.get('/orders/:id/invoice', generateInvoice);
+
+// DELETE /api/admin/orders/:id - Eliminar pedido
+router.delete('/orders/:id', deleteOrder);
 
 // ========================================
 // RUTAS DE CONFIGURACIONES DEL SISTEMA

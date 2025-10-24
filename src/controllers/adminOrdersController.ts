@@ -683,6 +683,75 @@ export const getOrderStats = async (req: AuthenticatedRequest, res: Response) =>
   }
 };
 
+// Eliminar pedido (soft delete o hard delete según prefieras)
+export const deleteOrder = async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    // Verificar que el usuario sea admin
+    if (req.user?.role !== 'ADMIN') {
+      return res.status(403).json({
+        error: 'Acceso denegado',
+        code: 'ACCESS_DENIED'
+      });
+    }
+
+    const { id } = req.params;
+
+    // Verificar que el pedido existe
+    const order = await prisma.order.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true
+      }
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        error: 'Pedido no encontrado',
+        code: 'ORDER_NOT_FOUND'
+      });
+    }
+
+    // Verificar que el pedido puede ser eliminado (opcional - solo cancelados/antiguos)
+    // Si quieres restringir, descomenta esto:
+    /*
+    const allowedStatuses = ['CANCELLED', 'REFUNDED'];
+    if (!allowedStatuses.includes(order.status)) {
+      return res.status(400).json({
+        error: 'Solo se pueden eliminar pedidos cancelados o reembolsados',
+        code: 'INVALID_ORDER_STATUS'
+      });
+    }
+    */
+
+    // OPCIÓN 1: HARD DELETE (eliminar permanentemente)
+    // Eliminar items del pedido primero
+    await prisma.orderItem.deleteMany({
+      where: { orderId: id }
+    });
+
+    // Eliminar el pedido
+    await prisma.order.delete({
+      where: { id }
+    });
+
+    console.log(`Pedido ${order.orderNumber} eliminado permanentemente por admin: ${req.user?.email}`);
+
+    res.json({
+      message: 'Pedido eliminado exitosamente',
+      orderNumber: order.orderNumber
+    });
+
+  } catch (error) {
+    console.error('Error deleting order:', error);
+    res.status(500).json({
+      error: 'Error interno del servidor',
+      code: 'INTERNAL_SERVER_ERROR'
+    });
+  }
+};
+
 // Funciones auxiliares para notificaciones y generación de PDFs
 
 // Enviar notificación de cambio de estado
